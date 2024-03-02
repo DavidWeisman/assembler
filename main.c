@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "globals.h"
 
 
 void handel_singel_file(char *file_name);
@@ -16,7 +17,7 @@ int main(int argc, char *argv[])
         handel_singel_file(argv[number_of_file]);
 
     }
-    printf("dd");
+    printf("%d", NOT_OP);
     return 0;
 }
 
