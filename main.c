@@ -11,12 +11,12 @@ int main(int argc, char *argv[])
         printf("You didn't enter any files\n");
     }
 
-    for (number_of_file = 1, number_of_file < argc; number_of_file++){
+    for (number_of_file = 1; number_of_file < argc; number_of_file++){
         
         handel_singel_file(argv[number_of_file]);
 
     }
-    
+    printf("dd");
     return 0;
 }
 
@@ -37,7 +37,7 @@ void handel_singel_file(char *file_name){
         printf("file can't be opend \n");
         return;
     }
-
+/*
     //function that change the end of the file in to .as
     
     // function that handel all the macro things
@@ -51,7 +51,7 @@ void handel_singel_file(char *file_name){
     // second pass
 
 
-
+*/
 
 }
 
