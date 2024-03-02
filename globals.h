@@ -1,4 +1,7 @@
 
+
+#define MAX_LINE_LENGTH 80
+
 /* Commands opcode */
 typedef enum opcodes {
 	MOV_OP = 0,

@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
         handel_singel_file(argv[number_of_file]);
 
     }
-    printf("%d", NOT_OP);
     return 0;
 }
 
