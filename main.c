@@ -1,6 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include "utils.h"
 #include "globals.h"
-
 
 void handel_singel_file(char *file_name);
 
@@ -8,7 +9,7 @@ int main(int argc, char *argv[])
 {
     int number_of_file;
 
-    if (argc == 0){
+    if (argc == 1){
         printf("You didn't enter any files\n");
     }
 
@@ -21,37 +22,31 @@ int main(int argc, char *argv[])
 }
 
 
-void change_file_name(char *file_name){
-
-
-
-}
 
 void handel_singel_file(char *file_name){
+    FILE *input_file; /*Current assembly file*/
+    char *input_filename;
+    line_info current_line;
+    char temp_line[MAX_LINE_LENGTH + 2]; /*Temporary string variable representing an input line*/
 
-    FILE *input_file;
+    /*Adds  .as extension */
+    input_filename = add_extension(file_name, ".as");
 
-    input_file = fopen(file_name, "r");
 
+    /*Open file with chack*/
+    input_file = fopen(input_filename, "r");
     if (input_file == NULL){
         printf("file can't be opend \n");
+        free(input_file);
         return;
-    }
-/*
-    //function that change the end of the file in to .as
+    } 
+
+    /*start first pass:*/
+    current_line.file_name = input_filename;
+    current_line.content = temp_line;
+    current_line.line_number = 1;
+   
     
-    // function that handel all the macro things
-
-    
-
-    // first pass
-
-    // if the first pass was a succsid then 
-    
-    // second pass
-
-
-*/
 
 }
 
