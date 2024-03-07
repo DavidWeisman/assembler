@@ -1,22 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "utils.h"
+#include "first_pass.h"
 #include "globals.h"
 
+
+/*Processes singel assembly file*/
 void handel_singel_file(char *file_name);
+
 
 int main(int argc, char *argv[])
 {
-    int number_of_file;
+    int number_of_file; /*Number of input assembly files*/
 
     if (argc == 1){
         printf("You didn't enter any files\n");
     }
 
+    /*Processes each file*/
     for (number_of_file = 1; number_of_file < argc; number_of_file++){
-        
         handel_singel_file(argv[number_of_file]);
-
     }
     return 0;
 }
@@ -26,6 +30,7 @@ int main(int argc, char *argv[])
 void handel_singel_file(char *file_name){
     FILE *input_file; /*Current assembly file*/
     char *input_filename;
+    int temp_c; /*Temporary variable for skiping remainin characters*/
     line_info current_line;
     char temp_line[MAX_LINE_LENGTH + 2]; /*Temporary string variable representing an input line*/
 
@@ -41,10 +46,30 @@ void handel_singel_file(char *file_name){
         return;
     } 
 
-    /*start first pass:*/
+    /*tart first pass:*/
     current_line.file_name = input_filename;
     current_line.content = temp_line;
     current_line.line_number = 1;
+
+    /* */
+    while (fgets(temp_line, MAX_LINE_LENGTH + 2, input_file) != NULL)
+    {
+
+        if (strchr(temp_line, '\n') == NULL && !feof(input_file)){
+            printf("Line too long to process.");
+
+            /* Skip remaining characters in the line */
+            temp_c = fgetc(input_file);
+            while (temp_c != '\n' && temp_c != EOF) {
+                temp_c = fgetc(input_file);
+            } 
+        }
+        else{
+            
+            
+        }
+    }
+    
    
     
 
