@@ -13,7 +13,7 @@ void process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC,
 
     int index = 0;
     char symbol[MAX_LINE_LENGTH];
-    instruction the_instruction;
+    instruction the_instruction;                  /*-----------------NEEDS NEW NAME----------------*/
 
     index = skip_spaces(line.content, index); /*Skips all the spaces or tabs*/
 
@@ -55,20 +55,26 @@ void process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC,
         return;
     }
 
+    /* Checks if it's an instruction, if it is saves in the varivale */
     the_instruction = find_instruction_from_index(line, &index);
 
-    if (the_instruction == ERROR_INST){
+    if (the_instruction == ERROR_INST){  /* If the instruction have an erroe */
         return;
     }
 
-    index = skip_spaces(line.content, index);
+    index = skip_spaces(line.content, index);  /*Skips all the spaces or tabs*/
 
+    /* If it's is an instruction */
     if (the_instruction != NONE_INST) {
         
+        /* If it's .string or .data, and the symmbal defined, puts it into hte symbol table*/
         if ((the_instruction == DATA_INST || the_instruction == STRING_INST) && symbol[0] != '\0'){
+            
+            /* If it's data or string, add DC with the symbol to the table as data*/
             add_table_item(symbol_table, symbol, *DC, DATA_SYMBOL);
         }
 
+        /* If it is a string, encode into data image and increase dc as needed*/
         if(the_instruction == STRING_INST){
             if (process_string_instruction(line, index, data_img, DC)){
                 return;
