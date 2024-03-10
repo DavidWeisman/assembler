@@ -1,26 +1,25 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-/** Maximum length of a single source line  */
+/* Maximum length of a single line  */
 #define MAX_LINE_LENGTH 80
 
 /* A struct that represet the informasion of a line*/
 typedef struct line_info {
-	/** Line number in file */
+	/* Line number in file */
 	long line_number;
-	/** File name */
+	/* File name */
 	char *file_name;
-	/** Line content (source) */
+	/* Line content */
 	char *content;
 } line_info;
 
-
+/* Boolean definition*/
 typedef enum booleans {
 	FALSE = 0, TRUE = 1
 } bool;
 
-
-/** Commands opcode */
+/* Commands opcode */
 typedef enum opcodes {
 	MOV_OP = 0,
 	CMP_OP = 1,
@@ -38,9 +37,10 @@ typedef enum opcodes {
 	JSR_OP = 13,
 	RTS_OP = 14,
 	HLT_OP = 15,
-	NONE_OP = -1
+	NONE_OP = -1 /* In case of error*/
 } opcode;
 
+/*Registers*/
 typedef enum registers {
 	R0 = 0,
 	R1,
@@ -50,11 +50,10 @@ typedef enum registers {
 	R5,
 	R6,
 	R7,
-	NONE_REG = -1
+	NONE_REG = -1 /* In case of error*/
 } reg;
 
-
-
+/* Instructions types*/
 typedef enum instruction {
 	/** .data instruction */
 	DATA_INST,
@@ -69,6 +68,5 @@ typedef enum instruction {
 	/** Parsing/syntax error */
 	ERROR_INST
 } instruction;
-
 
 #endif 

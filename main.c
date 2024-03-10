@@ -10,8 +10,7 @@
 void handel_singel_file(char *file_name);
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
     int number_of_file; /*Number of input assembly files*/
 
     if (argc == 1){
@@ -46,15 +45,15 @@ void handel_singel_file(char *file_name){
         return;
     } 
 
-    /*tart first pass:*/
+    /*Start first pass:*/
     current_line.file_name = input_filename;
     current_line.content = temp_line;
     current_line.line_number = 1;
 
-    /* */
+    /* Processes each line for the file separately */
     while (fgets(temp_line, MAX_LINE_LENGTH + 2, input_file) != NULL)
     {
-
+        /* In case of to o long line */    
         if (strchr(temp_line, '\n') == NULL && !feof(input_file)){
             printf("Line too long to process.");
 

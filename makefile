@@ -8,7 +8,7 @@ CFLAGS = -ansi -Wall -pedantic
 TARGET = my_program
 
 # Source files
-SRC = main.c utils.c first_pass.c code.c
+SRC = main.c utils.c first_pass.c code.c table.c instructions.c
 HEADERS = globals.h
 
 # Default target

@@ -7,13 +7,13 @@
 #include "utils.h"
 
 /* Table element*/
-struct table_element {
+struct command_element {
 	char *name;
 	opcode op;
 };
 
 /* Table element, opcode and command name*/
-static struct table_element lookup_table[] = {
+static struct command_element lookup_table[] = {
     {"mov", MOV_OP},
     {"cmp", CMP_OP},
     {"add", ADD_OP},
@@ -35,7 +35,7 @@ static struct table_element lookup_table[] = {
 
 /* Gets the opcode of the input element name*/
 void get_opcode(char *name, opcode *opcode_out){
-    struct table_element *element;
+    struct command_element *element;
     *opcode_out = NONE_OP; /* No match */
 
     for (element = lookup_table; element->name != NULL; element++) {
