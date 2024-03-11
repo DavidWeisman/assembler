@@ -57,6 +57,54 @@ reg get_register_by_name(char *name) {
 	return NONE_REG; /* No match */
 }
 
+addressing_type get_addressing_type(char *operand) {
+    char string[31];
+    char *open_bracket;
+    char *closeing_bracket;
+    char *number;
+    int num_len;
+    if (operand[0] == 'r' && operand[1] >= '0' && operand[1] <= '7' && operand[2] == '\0'){
+        return REGISTER_ADDR;
+    }
+    else if (operand[0] == '#' && check_if_digit(operand + 1)) {
+        return IMMEDIATE_ADDR;
+    }
+    else if (check_label_name(operand)) {
+        return DIRECT_ADDR;
+    }
+    else if (operand[0] == '\0') {
+        open_bracket = strchr(operand, '[');
+        if (!open_bracket) {
+            return NONE_ADDR;
+        }
+        strncpy(string, operand, open_bracket - operand);
+        string[open_bracket - operand] = '\0';
+
+        if (!check_label_name(string)) {
+            return NONE_ADDR;
+        }
+        closeing_bracket = strchr(operand, ']');
+        if (!closeing_bracket) {
+            return NONE_ADDR;
+        }
+        if (closeing_bracket[1] != '\0') {
+            return NONE_ADDR;
+        }
+
+        num_len = closeing_bracket - open_bracket - 1;
+        number = (char *)malloc((num_len + 1) * sizeof(char));
+        strncpy(number, open_bracket + 1, num_len);
+        number[num_len] = '\0';
+        if (!check_if_digit(number)) {
+            return NONE_ADDR;
+        }
+        return INDEX_FIXED_ADDR;
+    }
+    else {
+        return NONE_ADDR;
+    }
+}
+
 bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation) {
     int index_o = 0;
     *operand_count = 0;
@@ -120,3 +168,11 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
     }
     return TRUE;
 }
+
+
+/*
+code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char *operands[2]) {
+    code_word *codeword;
+
+}
+*/

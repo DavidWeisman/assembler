@@ -4,6 +4,6 @@
 #include "table.h"
 
 /*Processes a single line in the first pass*/
-bool process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC, long *data_img);
+bool process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC, long *data_img, machine_word **code_img);
 
 #endif

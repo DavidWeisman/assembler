@@ -9,7 +9,7 @@
 
 
 /*Processes a single line in the first pass*/
-bool process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC, long *data_img, machine_word **code_img){
+bool process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC, long *data_img, machine_word **code_img) {
     int index_l = 0;
     int index_s = 0;
     char symbol[MAX_LINE_LENGTH];
@@ -137,4 +137,5 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
 		return FALSE;
 	}
 
+    return TRUE;
 }

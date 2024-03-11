@@ -90,4 +90,13 @@ typedef struct machine_word {
 	} word;
 } machine_word;
 
+
+typedef enum addressing_types {
+	IMMEDIATE_ADDR = 0,
+	DIRECT_ADDR = 1,
+	INDEX_FIXED_ADDR = 2,
+	REGISTER_ADDR = 3,
+	NONE_ADDR = -1
+}addressing_type;
+
 #endif 

@@ -17,4 +17,5 @@ reg get_register_by_name(char *name);
 */
 void get_opcode(char *name, opcode *opcode_out);
 
+bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation);
 #endif
