@@ -69,4 +69,25 @@ typedef enum instruction {
 	ERROR_INST
 } instruction;
 
+typedef struct code_word {
+	unsigned int ARE: 2;
+	unsigned int dest_addressing: 2;
+	unsigned int src_addressing: 2;
+	unsigned int opcode: 4;
+
+} code_word;
+
+typedef struct data_word {
+	unsigned int ARE: 2;
+	unsigned long data;
+} data_word;
+
+typedef struct machine_word {
+	short length;
+	union word {
+		data_word *data;
+		code_word *code;
+	} word;
+} machine_word;
+
 #endif 

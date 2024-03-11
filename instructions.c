@@ -71,3 +71,58 @@ bool process_string_instruction(line_info line, int index_l, long *data_img, lon
     }
     return TRUE; /* End of the process*/
 }
+
+
+
+
+bool process_data_instruction(line_info line, int index_l, long *data_img, long *dc){
+    char number[MAX_LINE_LENGTH];
+    char *temp_pointer;
+    long number_value;
+    int index_n;
+    
+    index_l = skip_spaces(line.content, index_l);
+
+    if (line.content[index_l] == ',') {
+        printf("Unexpected comma after .data instruction");
+    }
+
+    while (line.content[index_l] != '\n' && line.content[index_l] != EOF) {
+        index_n = 0;
+        while (check_char(line.content[index_l])) {
+            number[index_n] = line.content[index_l];
+            index_l++;
+            index_n++;
+        }
+
+        number[index_n] = '\0';
+
+        if (!check_if_digit(number)) {
+            printf("Expected integer for .data instruction");
+            return FALSE;
+        }
+
+        number_value = strtol(number, &temp_pointer, 10);
+        data_img[*dc] = number_value;
+
+        (*dc)++;
+        index_l = skip_spaces(line.content, index_l);
+        if (line.content[index_l] == ',') {
+            index_l++;
+        }
+        else if (!line.content[index_l] || line.content[index_l] == '\n' || line.content[index_l] == EOF){
+            break;
+        }
+
+        index_l = skip_spaces(line.content, index_l);
+        if (line.content[index_l] == ',') {
+            printf("Multiple consecutive commas.");
+            return FALSE;
+        }
+        else if (line.content[index_l] == EOF || line.content[index_l] == '\n' || !line.content[index_l]) {
+            printf("Missing data after comma");
+            return FALSE;
+        }
+    }
+    return TRUE;
+}

@@ -90,6 +90,7 @@ table_entry *find_by_types(table tab, char *name){
 
     /* NO item was found*/
     return NULL;
+    
 }
 
 

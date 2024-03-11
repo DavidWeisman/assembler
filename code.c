@@ -56,3 +56,67 @@ reg get_register_by_name(char *name) {
 	}
 	return NONE_REG; /* No match */
 }
+
+bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation) {
+    int index_o = 0;
+    *operand_count = 0;
+    destination[0] = NULL;
+    destination[1] = NULL;
+    index_l = skip_spaces(line.content, index_l);
+    if (line.content[index_l] == ',') {
+        printf("Unexpected comma after command.");
+        return FALSE;
+    }
+
+    for (*operand_count = 0; line.content[index_l] != EOF && line.content[index_l] != '\n' && line.content[index_l];) {
+		if (*operand_count == 2) {
+			printf("Too many operands for operation");
+			free(destination[0]);
+			free(destination[1]);
+			return FALSE; 
+		}
+
+        destination[*operand_count] = malloc(MAX_LINE_LENGTH);
+        if (destination[*operand_count] == NULL) {
+            printf("Memory not allocated");
+            return FALSE;
+        }
+
+        while (check_char(line.content[index_l])) {
+            destination[*operand_count][index_o] = line.content[index_l];
+        }
+        destination[*operand_count][index_o] = '\0';
+        (*operand_count)++;
+
+        index_l = skip_spaces(line.content, index_l);
+        
+        if (line.content[index_l] == '\n' || line.content[index_l] == EOF || !line.content[index_l]) {
+            break;
+        }
+        else if (line.content[index_l] != ',') {
+            printf("Expecting ',' between operands");
+            free(destination[0]);
+            if (*operand_count > 1) {
+                free(destination[1]);
+            }
+            return FALSE;
+        }
+        index_l++;
+        index_l = skip_spaces(line.content, index_l);
+        if (line.content[index_l] == '\n' || line.content[index_l] == EOF || !line.content[index_l]) {
+            printf("Missing operand after comma.");
+        }
+        else if (line.content[index_l] == ',') {
+            printf("Multiple consecutive commas.");
+        }
+        else continue;
+        {
+            free(destination[0]);
+            if (*operand_count > 1) {
+				free(destination[1]);
+			}
+			return FALSE;
+        }
+    }
+    return TRUE;
+}

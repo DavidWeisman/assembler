@@ -60,4 +60,8 @@ bool chec_all_str_alpha(char *string);
 */
 bool check_label_name(char *label_name);
 
+
+bool check_if_digit(char *string);
+bool check_char(char singel_char);
+
 #endif

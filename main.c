@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "first_pass.h"
 #include "globals.h"
+#include "utils.h"
 
 
 /*Processes singel assembly file*/
