@@ -1,10 +1,10 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-/* Maximum length of a single line  */
+/** Maximum length of a single line  */
 #define MAX_LINE_LENGTH 80
 
-/* A struct that represet the informasion of a line*/
+/** A struct that represet the informasion of a line*/
 typedef struct line_info {
 	/* Line number in file */
 	long line_number;
@@ -14,12 +14,12 @@ typedef struct line_info {
 	char *content;
 } line_info;
 
-/* Boolean definition*/
+/** Boolean definition*/
 typedef enum booleans {
 	FALSE = 0, TRUE = 1
 } bool;
 
-/* Commands opcode */
+/** Commands opcode */
 typedef enum opcodes {
 	MOV_OP = 0,
 	CMP_OP = 1,
@@ -37,10 +37,10 @@ typedef enum opcodes {
 	JSR_OP = 13,
 	RTS_OP = 14,
 	HLT_OP = 15,
-	NONE_OP = -1 /* In case of error*/
+	NONE_OP = -1 /** In case of error*/
 } opcode;
 
-/*Registers*/
+/** Registers */
 typedef enum registers {
 	R0 = 0,
 	R1,
@@ -50,10 +50,10 @@ typedef enum registers {
 	R5,
 	R6,
 	R7,
-	NONE_REG = -1 /* In case of error*/
+	NONE_REG = -1 /** In case of error*/
 } reg;
 
-/* Instructions types*/
+/** Instructions types */
 typedef enum instruction {
 	/** .data instruction */
 	DATA_INST,
@@ -69,19 +69,27 @@ typedef enum instruction {
 	ERROR_INST
 } instruction;
 
+/** Singel code word*/
 typedef struct code_word {
+	/** First two bits: ARE*/
 	unsigned int ARE: 2;
+	/** Next two bits: destination addressing opcode*/
 	unsigned int dest_addressing: 2;
+	/** Next two bits: source addressing opcode*/
 	unsigned int src_addressing: 2;
+	/** The last four bits: opcode*/
 	unsigned int opcode: 4;
 
 } code_word;
 
+/** Singel data word*/
 typedef struct data_word {
 	unsigned int ARE: 2;
 	unsigned long data;
 } data_word;
 
+
+/* General machine code word*/
 typedef struct machine_word {
 	short length;
 	union word {
@@ -92,11 +100,15 @@ typedef struct machine_word {
 
 
 typedef enum addressing_types {
+	/* Immediate addressing */
 	IMMEDIATE_ADDR = 0,
+	/** Direct addressing */
 	DIRECT_ADDR = 1,
+	/** Index fixed addressing */
 	INDEX_FIXED_ADDR = 2,
+	/** Register addressing */
 	REGISTER_ADDR = 3,
-	NONE_ADDR = -1
+	NONE_ADDR = -1 /** In case of erroe */
 }addressing_type;
 
 #endif 

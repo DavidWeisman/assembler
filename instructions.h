@@ -20,6 +20,13 @@ instruction find_instruction_from_index(line_info line, int *index);
 */
 bool process_string_instruction(line_info line, int index_l, long *data_img, long *dc);
 
-
+/**
+ * Processes a data instruction from the index of the input line
+ * @param line The input line string
+ * @param index_l The Index of the start of the looking
+ * @param data_img The corrent data image
+ * @param dc The current data counter
+ * @return True or false if succeeded or not
+*/
 bool process_data_instruction(line_info line, int index_l, long *data_img, long *dc);
 #endif

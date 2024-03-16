@@ -17,5 +17,21 @@ reg get_register_by_name(char *name);
 */
 void get_opcode(char *name, opcode *opcode_out);
 
+/**
+ * Returns the addressing type of an operand
+ * @param operand The pinter to the string of the operand
+ * @return The addressing type of an operand
+*/
+addressing_type get_addressing_type(char *operand);
+
+/**
+ * Separates the operands from the given index, puts each of the operands into the destination array, and puts the number of the operands into the count argument
+ * @param line The input line we work on
+ * @param index_l The Index of the start of the looking
+ * @param destination The array of at least a 2 cell that saves the strings of the extaracted operand strings
+ * @param operand_count The counter of the operands
+ * @param operation The current command stirng
+ * @return True of false if the analyzing succeded or not
+*/
 bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation);
 #endif

@@ -60,8 +60,12 @@ bool chec_all_str_alpha(char *string);
 */
 bool check_label_name(char *label_name);
 
-
+/**
+ * Check if all the chars in the given string are digits
+ * @param string The input string that needs to be checked
+ * @return True or false depens if the input string is a digit or not
+*/
 bool check_if_digit(char *string);
-bool check_char(char singel_char);
+
 
 #endif

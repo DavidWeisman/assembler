@@ -117,44 +117,25 @@ bool check_label_name(char *label_name){
 }
 
 
+/* check if all the chars in the givan string are digits*/
 bool check_if_digit(char *string) {
     int index_s = 0;
-    if (string[0] == '-' || string[0] == '+') {
+    if (string[0] == '-' || string[0] == '+') { /*If the string statrts with "+" or "-" it's OK*/
         string++;
     }
-    while (string[index_s] != '\0') {
+    while (string[index_s] != '\0') {   /*Check if every char in the string is a digit*/
         if (!isdigit(string[index_s])) {
             return FALSE;
         }
         index_s++;
     }
-    if (index_s == 0) {
+    if (index_s == 0) {  /* In case it was an empy string*/
         return FALSE;
     }
     return TRUE;
 }
 
 
-bool check_char(char singel_char) {
-    int index_of_array;
-    char elements_to_check[] = {'\t', ' ', ',', '\n'};
-    int array_length = sizeof(elements_to_check) / sizeof(elements_to_check[0]);
-    
-    if (!singel_char) {
-        return FALSE;
-    }
-    
-    if (singel_char == EOF) {
-        return FALSE;
-    }
-    
-    for (index_of_array = 0; index_of_array < array_length; index_of_array++) {
-        if (singel_char == elements_to_check[index_of_array]) {
-            return FALSE;
-        }
-    }
-    
-    return TRUE;         
-}
+
 
 
