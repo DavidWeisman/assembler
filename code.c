@@ -6,6 +6,23 @@
 #include "code.h"
 #include "utils.h"
 
+
+
+
+/**
+ * Checks the operands addressing types, prints error if needed
+ * @param op_addressing The current addressing of the operand
+ * @param number_of_addrs Number of the valids addresing for the operand
+ * @param valid_addr1 The first valid addresing type for the operand 
+ * @param valid_addr2 The second valid addresing type for the operand 
+ * @param valid_addr3 The third  valid addresing type for the operand 
+ * @param valid_addr4 The fourth  valid addresing type for the operand 
+ * @return True or false depens if the addresing type is valid or not
+*/
+static bool validate_op_addr(addressing_type op_addressing, int number_of_addrs, addressing_type valid_addr1, addressing_type valid_addr2, addressing_type valid_addr3, addressing_type valid_addr4);
+
+
+
 /* Table element*/
 struct command_element {
 	char *name;
@@ -64,7 +81,7 @@ addressing_type get_addressing_type(char *operand) {
     char *closeing_bracket; /* Pointer to the closeing bracket in the operand*/
     char *number; /* Pointer to the digit between the brackets*/
     int num_len; /* The length of the number*/
-
+    
     /* If first char is 'r', second is number in range 0-7 and third is end of string, it's a register */
     if (operand[0] == 'r' && operand[1] >= '0' && operand[1] <= '7' && operand[2] == '\0'){
         return REGISTER_ADDR;
@@ -152,7 +169,7 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
             printf("Memory not allocated");
             return FALSE;
         }
-
+        index_o = 0; 
         /* as long we're still on same operand */
         while (line.content[index_l] && line.content[index_l] != '\t' && line.content[index_l] != ' ' && line.content[index_l] != '\n' && line.content[index_l] != EOF && line.content[index_l] != ',') {
             destination[*operand_count][index_o] = line.content[index_l];
@@ -201,10 +218,165 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
     return TRUE;
 }
 
+/**
+ * Checks the operands's addressing types by the opcode of the operation
+ * @param line The current line we word on
+ * @param first_addresing The addresing of the first operand
+ * @param second_addressing The addresing of the second operand
+ * @param curr_opcode The opcode of the currnt operation 
+ * @param op_count The cunter of the operands
+ * @return True or false if the addressing are valid or not
+*/
+bool validate_operand_by_opcode(line_info line, addressing_type first_addresing, addressing_type second_addressing, opcode curr_opcode, int op_count) {
+    if (curr_opcode == LEA_OP || (curr_opcode >= MOV_OP && curr_opcode <= SUB_OP)) {
+        /* Only two operands required */
+        if (op_count != 2) {
+            printf( "Operation requires 2 operands");
+            return FALSE;
+        }
 
-/*
+        /* Checks if the addressing are valid */
+        if (curr_opcode == MOV_OP || curr_opcode == ADD_OP || curr_opcode == SUB_OP) {
+            if (!validate_op_addr(first_addresing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR)) {
+                return FALSE;
+            }
+            return validate_op_addr(second_addressing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR);
+        }
+        else if (curr_opcode == CMP_OP) {
+            if (!validate_op_addr(first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR)) {
+                return FALSE;
+            }
+            return  validate_op_addr(second_addressing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR);
+        }
+        else if (curr_opcode == LEA_OP) {
+            if (!validate_op_addr(first_addresing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR)) {
+                return FALSE;
+            }
+            return validate_op_addr(second_addressing, 2, DIRECT_ADDR, INDEX_FIXED_ADDR, NONE_ADDR, NONE_ADDR);
+        }
+    }
+    else if (curr_opcode == NOT_OP || curr_opcode == CLR_OP || (curr_opcode >= INC_OP && curr_opcode <= JSR_OP)) {
+        if (op_count != 1) {
+            /* Only one operand required */
+		    if (op_count < 1) {
+                printf("Operation requires 1 operand ");
+			    return FALSE;
+            } 
+		}
+
+        /* Checks if the addressing are valid */
+        if (curr_opcode == NOT_OP || curr_opcode == CLR_OP || curr_opcode == INC_OP || curr_opcode == DEC_OP || curr_opcode == RED_OP) {
+            return validate_op_addr(first_addresing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR);
+        }
+        else if (curr_opcode == JMP_OP || curr_opcode == BNE_OP || curr_opcode == JSR_OP) {
+            return validate_op_addr(first_addresing, 2, DIRECT_ADDR, REGISTER_ADDR, NONE_ADDR, NONE_ADDR);
+        }
+        else { /* It's PRN*/
+            return validate_op_addr(first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR);
+        }
+    }
+    else if (curr_opcode == RTS_OP || curr_opcode == HLT_OP) {
+        /* Zero oprerands exactly */
+        if (op_count > 0) {
+			printf("Operation requires no operands");
+			return FALSE;
+		}
+    }
+    return TRUE;
+}
+
+/* Gets the code word*/
 code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char *operands[2]) {
     code_word *codeword;
+    addressing_type first_addr = NONE_ADDR;
+    addressing_type second_addr = NONE_ADDR;
 
+    /* Gets the addressing types */
+    if (op_count >= 1) {
+        first_addr = get_addressing_type(operands[0]);
+    }
+    if (op_count == 2) {
+        second_addr = get_addressing_type(operands[1]);
+    }
+    
+    if (!validate_operand_by_opcode(line, first_addr, second_addr, curr_opcode, op_count)) {
+        return NULL;
+    }
+
+    /* Allocate memory for the codeword*/
+    codeword = (code_word *)malloc(sizeof(code_word));
+    if (codeword == NULL) {
+        printf("Memory allocation failed\n");
+        return NULL;
+    }
+
+    /* Sets the opcode and the ARE of the codeword*/
+    codeword->opcode = curr_opcode;
+    codeword->ARE = 0;
+
+    /* Default values for the addressign */
+    codeword->dest_addressing = NONE_ADDR;
+    codeword->src_addressing = NONE_ADDR;
+
+    /* Sets the addressing types */
+    if (curr_opcode == LEA_OP || (curr_opcode >= MOV_OP && curr_opcode <= SUB_OP)) {
+        codeword->src_addressing = first_addr;
+        codeword->dest_addressing = second_addr;
+    }
+    else if (curr_opcode == NOT_OP || curr_opcode == CLR_OP || (curr_opcode >= INC_OP && curr_opcode <= JSR_OP)) {
+        codeword->dest_addressing = first_addr;
+    }
+    return codeword;
 }
-*/
+
+static bool validate_op_addr(addressing_type op_addressing, int number_of_addrs, addressing_type valid_addr1, addressing_type valid_addr2, addressing_type valid_addr3, addressing_type valid_addr4) {
+    bool is_valid = FALSE; 
+    int index;
+    addressing_type op_valids[4]; /* Array of the valid addresing*/
+    op_valids[0] = valid_addr1;
+    op_valids[1] = valid_addr2;
+    op_valids[2] = valid_addr3;
+    op_valids[3] = valid_addr4;
+
+    /* Checks if the operand addressing type has match to any of the valid ones */
+    for (index = 0; index < number_of_addrs; index++) {
+        if (op_valids[index] == op_addressing) {
+            is_valid = TRUE;
+        }
+    }
+    if (!is_valid) {
+        printf("Invalid addressing mode for first operand.\n");
+        return FALSE;
+    }
+    return TRUE;
+}
+
+
+data_word *build_data_word(addressing_type addressing, long data, bool is_extern_symbol) {
+    signed long mask; /* For bitwise operations for data conversion */
+    unsigned long ARE = 0;
+    unsigned long mask_un;
+
+    data_word *dataword = (data_word *)malloc(sizeof(data_word));
+    if (dataword == NULL) {
+        printf("Memory allocation failed");
+        return NULL;
+    }
+
+    if (addressing == DIRECT_ADDR) {
+        if(is_extern_symbol) {
+            ARE = 1;
+        }
+        else {
+            ARE = 2;
+        }
+    }
+    dataword->ARE = ARE; /* Set ARE field value */
+
+    /* Now all left is to encode the data */
+	mask = -1;
+	mask_un = mask; /* both hold 11...11 */
+	mask_un >>= 11; /* Now mask_un holds 0..001111....111, 11 zeros and 21 ones */
+	dataword->data = mask_un & data; /* Now just the 21 lsb bits area left and assigned to data field. */
+	return dataword;
+}

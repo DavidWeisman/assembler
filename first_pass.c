@@ -8,8 +8,20 @@
 #include "first_pass.h"
 
 
+/**
+ *  Processes a single code line in the first pass.
+ * Adds the code build binary structure to the code_img,
+ * encodes immediately-addresses operands and leaves required data word that use labels NULL.
+ * @param line The code line to process
+ * @param index_l Where to start processing the line from
+ * @param ic A pointer to the current instruction counter
+ * @param code_img The code image array
+ * @return Whether succeeded or notssss
+ */
+static bool process_code(line_info line, int index_l, long *ic, machine_word **code_img);
+
 /*Processes a single line in the first pass*/
-bool process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC, long *data_img, machine_word **code_img) {
+bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_img, long *data_img, table *symbol_table) {
     int index_l = 0;
     int index_s = 0;
     char symbol[MAX_LINE_LENGTH];
@@ -49,7 +61,7 @@ bool process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC,
     if (line.content[index_l] == '\n'){
         return TRUE;
     }
-
+    
     /*Checks if the symblol was alrady defined as data/external/cod */ 
     if (find_by_types(*symbol_table, symbol)){
         printf("Symbol %s is already defined.", symbol);
@@ -58,13 +70,13 @@ bool process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC,
 
     /* Checks if it's an instruction, if it is saves in the varivale */
     currentInstruction = find_instruction_from_index(line, &index_l);
-
+    
     if (currentInstruction == ERROR_INST){  /* If the instruction have an erroe */
         return FALSE;
     }
 
     index_l = skip_spaces(line.content, index_l);  /*Skips all the spaces or tabs*/
-
+    
     /* If it's is an instruction */
     if (currentInstruction != NONE_INST) {
         
@@ -113,10 +125,20 @@ bool process_line_fpass(line_info line, table *symbol_table, long *IC, long *DC,
         if (symbol[0] != '\0'){
             add_table_item(symbol_table, symbol, *IC, CODE_SYMBOL);
         }
-        /* return process_code(line, i, IC, code_img);*/
+        /* Analyze code */
+        return process_code(line, index_l, IC, code_img);
     }
     return TRUE;
 }
+
+/** 
+ * Allocates and builds the data inside the additional code word by the given operand,
+ * Only in the first pass
+ * @param code_img The current code image
+ * @param ic The current instruction counter
+ * @param operand the operand to check
+*/
+static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand);
 
 
 /**
@@ -140,10 +162,12 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
     machine_word *word_to_write;
 
     index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
-
+    
     /* copyes the operation */
     while (line.content[index_l] && line.content[index_l] != '\t' && line.content[index_l] != ' ' && line.content[index_l] != '\n' && line.content[index_l] != EOF && index_o < 6) {
         operation[index_o] = line.content[index_l];
+        index_l++;
+        index_o++;
     }
     operation[index_o] = '\0'; /* End of string */
 
@@ -160,6 +184,67 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
     if (!analyze_operands(line, index_l, operands, &operand_count, operation))  {
 		return FALSE;
 	}
+    /* Build the code word */
+    codeword = get_code_word(line, curr_opcode, operand_count, operands);
+    if (codeword == NULL) {
+        /* If there where any erroe in the building release teh allocated memory of the operans*/
+        if (operands[0]) {
+            free(operands[0]);
+            if (operands[1]) {
+                free(operands[1]);
+            }
+        }
+        return FALSE;
+    }
+    /* ic is in position of a new code word*/
+    ic_before = *ic;
 
-    return TRUE;
+    /* allocate memory for a new word in the code image, and put the code word into it */
+    word_to_write = (machine_word *)malloc(sizeof(machine_word));
+    if (word_to_write == NULL) {
+        printf("Memory allocation failed");
+        return FALSE;
+    }
+    (word_to_write->word).code = codeword;
+    code_img[(*ic) - IC_INIT_VALUE] = word_to_write; /* Avoid "spending" cells of the array, by starting from initial value of ic */
+
+    /* Build extra information code word if possible, free pointers with no need */
+    if (operand_count--) { /* If there's 1 operand at least */
+        build_extra_codeword_fpass(code_img, ic, operands[0]);
+        free(operands[0]);
+        if (operand_count) { /* If there are 2 operands */
+            build_extra_codeword_fpass(code_img, ic, operands[1]);
+            free(operands[1]);
+        }
+    }
+
+    (*ic)++; /* increase ic to point the next cell */
+
+    /* Add the final length (of code word + data words) to the code word struct: */
+    code_img[ic_before - IC_INIT_VALUE]->length = (*ic) - ic_before;
+
+    return TRUE; /* No errors */
+}
+
+
+static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand) {
+    addressing_type operand_addr = get_addressing_type(operand);
+
+    if (operand_addr != NONE_ADDR && operand_addr != REGISTER_ADDR) {
+        (*ic)++;
+        if (operand_addr == IMMEDIATE_ADDR) {
+            char *ptr;
+            machine_word *word_to_write;
+
+            long value = strtol(operand + 1, &ptr, 10);
+            word_to_write = (machine_word *)malloc(sizeof(machine_word));
+            if (word_to_write == NULL) {
+                printf("Memory allocation failed");
+                exit(1);
+            }
+            word_to_write->length = 0; /* Not Code word! */
+            (word_to_write->word).data = build_data_word(IMMEDIATE_ADDR, value, FALSE);
+            code_img[(*ic) - IC_INIT_VALUE] = word_to_write; /* Avoid "spending" cells of the array, by starting from initial value of ic */
+        }
+    }
 }

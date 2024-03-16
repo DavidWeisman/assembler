@@ -1,3 +1,5 @@
 .vscode
 file.as
 my_program.exe
+
+*.o

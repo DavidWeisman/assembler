@@ -4,6 +4,13 @@
 /** Maximum length of a single line  */
 #define MAX_LINE_LENGTH 80
 
+/** Initial IC value */
+#define IC_INIT_VALUE 100
+
+/** Maximum size of code image and data image */
+#define CODE_ARR_IMG_LENGTH 1200
+
+
 /** A struct that represet the informasion of a line*/
 typedef struct line_info {
 	/* Line number in file */

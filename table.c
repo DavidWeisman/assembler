@@ -50,6 +50,14 @@ void add_table_item(table *tab, char *name, long value, symbol_type type){
     prev_table->next = new_table;
 }
 
+void add_value_to_type(table tab, long to_add, symbol_type type) {
+    table curr_item;
+    for (curr_item = tab; curr_item != NULL; curr_item = curr_item->next) {
+        if (curr_item->type == type) {
+            curr_item->value += to_add;
+        }
+    }
+}
 
 bool check_item_name(char *table_name, char *new_name){
     return strcmp(table_name, new_name) == 0;
@@ -85,6 +93,11 @@ table_entry *find_by_types(table tab, char *name){
                     return tab;
                 }
                 break;
+            case EXTERNAL_REFERENCE:
+                if (check_item_name(tab->name, name)) {
+                    return tab;
+                }
+                break;
         }
 	} while ((tab = tab->next) != NULL);
 
@@ -92,6 +105,9 @@ table_entry *find_by_types(table tab, char *name){
     return NULL;
     
 }
+
+
+
 
 
 

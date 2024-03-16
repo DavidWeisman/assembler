@@ -38,10 +38,8 @@ instruction find_instruction_from_index(line_info line, int *index_l) {
 /* Process string Instruction */
 bool process_string_instruction(line_info line, int index_l, long *data_img, long *dc) {
     char temp_string[MAX_LINE_LENGTH];              
-
     char *last_quote_location = strrchr(line.content, '"'); /* The last quote location in the input line*/
     index_l = skip_spaces(line.content, index_l);  /*Skips all the spaces or tabs*/
-    
     if (line.content[index_l] != '"') {
         /* If the instruction string isn't starts with quote*/
         printf("Missing opening quote of string");
@@ -116,7 +114,7 @@ bool process_data_instruction(line_info line, int index_l, long *data_img, long 
         }
 
         index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
-         
+
         if (line.content[index_l] == ',') {
             printf("Multiple consecutive commas.");
             return FALSE;

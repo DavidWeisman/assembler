@@ -24,6 +24,17 @@ void get_opcode(char *name, opcode *opcode_out);
 */
 addressing_type get_addressing_type(char *operand);
 
+
+/**
+ * Checks and builds the code word by the opcode, operand count and operand strings
+ * @param line The current line we work on
+ * @param curr_opcode The current opcode
+ * @param op_count The counter of the operands
+ * @param operands An array of two cell of opinters to first and second operands
+ * @return A pointer to the codeword, if there is an erroe return NULL
+*/
+code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char *operands[2]);
+
 /**
  * Separates the operands from the given index, puts each of the operands into the destination array, and puts the number of the operands into the count argument
  * @param line The input line we work on
@@ -34,4 +45,13 @@ addressing_type get_addressing_type(char *operand);
  * @return True of false if the analyzing succeded or not
 */
 bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation);
+
+/**
+ * Builds a data word by the operand's addressing type, value and whether the symbol (if it is one) is external.
+ * @param addressing The addressing type of the value
+ * @param data The value
+ * @param is_extern_symbol If the symbol is a label, and it's external
+ * @return A pointer to the new data word 
+*/
+data_word *build_data_word(addressing_type addressing, long data, bool is_extern_symbol);
 #endif

@@ -6,6 +6,7 @@ typedef enum symbol_type {
 	CODE_SYMBOL,
 	DATA_SYMBOL,
 	EXTERNAL_SYMBOL,
+	EXTERNAL_REFERENCE,
 	ENTRY_SYMBOL
 } symbol_type;
 
@@ -49,4 +50,13 @@ bool check_item_name(char *table_name, char *new_name);
 */
 table_entry *find_by_types(table tab, char *name);
 
+
+
+/**
+ * Adds the value to_add into the values of each table item
+ * @param tab The table, containing the tables items
+ * @param to_add the value to add
+ * @param type the type of teh symbols to add the value to
+*/
+void add_value_to_type(table tab, long to_add, symbol_type type);
 #endif

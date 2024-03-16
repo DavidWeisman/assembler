@@ -1,26 +1,40 @@
-# Makefile for compiling main.c with globals.h
+# Basic compilation macros
+CC = gcc # GCC Compiler
+CFLAGS = -ansi -Wall -pedantic # Flags
+GLOBAL_DEPS = globals.h # Dependencies for everything
+EXE_DEPS = main.o code.o fpass.o spass.o instructions.o table.o utils.o # Deps for exe
 
-# Compiler and flags
-CC = gcc
-CFLAGS = -ansi -Wall -pedantic
+## Executable
+main: $(EXE_DEPS) $(GLOBAL_DEPS)
+	$(CC) -g $(EXE_DEPS) $(CFLAGS) -o $@
 
-# Target executable
-TARGET = my_program
+## Main:
+main.o: main.c $(GLOBAL_DEPS)
+	$(CC) -c main.c $(CFLAGS) -o $@
 
-# Source files
-SRC = main.c utils.c first_pass.c code.c table.c instructions.c
-HEADERS = globals.h
+## Code helper functions:
+code.o: code.c code.h $(GLOBAL_DEPS)
+	$(CC) -c code.c $(CFLAGS) -o $@
 
-# Default target
-all: $(TARGET)
+## First Pass:
+fpass.o: first_pass.c first_pass.h $(GLOBAL_DEPS)
+	$(CC) -c first_pass.c $(CFLAGS) -o $@
 
-# Rule to build the executable
-$(TARGET): $(SRC)
-	$(CC) $(CFLAGS) -o $@ $^
+## Second Pass:
+spass.o: second_pass.c second_pass.h $(GLOBAL_DEPS)
+	$(CC) -c second_pass.c $(CFLAGS) -o $@
+	
+instructions.o: instructions.c instructions.h $(GLOBAL_DEPS)
+	$(CC) -c instructions.c $(CFLAGS) -o $@
 
-# Rule to compile source file
-$(SRC): $(HEADERS)
+## Table:
+table.o: table.c table.h $(GLOBAL_DEPS)
+	$(CC) -c table.c $(CFLAGS) -o $@
 
-# Clean up
+## Useful functions:
+utils.o: utils.c instructions.h $(GLOBAL_DEPS)
+	$(CC) -c utils.c $(CFLAGS) -o $@
+
+# Clean Target (remove leftovers)
 clean:
-	rm -f $(TARGET)
+	rm -rf *.o
