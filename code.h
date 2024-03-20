@@ -44,14 +44,15 @@ code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char 
  * @param operation The current command stirng
  * @return True of false if the analyzing succeded or not
 */
-bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation);
+bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation, table symbol_table);
 
 /**
  * Builds a data word by the operand's addressing type, value and whether the symbol (if it is one) is external.
  * @param addressing The addressing type of the value
  * @param data The value
  * @param is_extern_symbol If the symbol is a label, and it's external
+ * @param is_src_operand If the operand is a source operand
  * @return A pointer to the new data word 
 */
-data_word *build_data_word(addressing_type addressing, long data, bool is_extern_symbol);
+data_word *build_data_word(addressing_type addressing, long data, bool is_extern_symbol, bool is_dest_operand);
 #endif

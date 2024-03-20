@@ -7,6 +7,7 @@ typedef enum symbol_type {
 	DATA_SYMBOL,
 	EXTERNAL_SYMBOL,
 	EXTERNAL_REFERENCE,
+	MDEFINE_SYMBOL,
 	ENTRY_SYMBOL
 } symbol_type;
 
@@ -50,7 +51,11 @@ bool check_item_name(char *table_name, char *new_name);
 */
 table_entry *find_by_types(table tab, char *name);
 
-
+/**
+ * Deallocates all the memory required by the table.
+ * @param tab The table to deallocate
+ */
+void free_table(table tab);
 
 /**
  * Adds the value to_add into the values of each table item
@@ -59,4 +64,12 @@ table_entry *find_by_types(table tab, char *name);
  * @param type the type of teh symbols to add the value to
 */
 void add_value_to_type(table tab, long to_add, symbol_type type);
+
+/**
+ * Returns all the entries by their type in a new table
+ * @param tab The table
+ * @param type The type to look for
+ * @return A new table, which contains the entries
+ */
+table filter_table_by_type(table tab, symbol_type type);
 #endif

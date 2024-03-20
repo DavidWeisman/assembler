@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "utils.h"
 #include "code.h"
+#include "table.h"
 
 /*Adds an extension for a file name*/
 char* add_extension(char *file_name, char *extension ){
@@ -27,6 +28,90 @@ int skip_spaces(char *string, int index){
     }
     return index;
 }
+
+bool check_mdefine(line_info line, table *symbol_table, char *symbol) {
+    char token[MAX_LINE_LENGTH];
+    char num[MAX_LINE_LENGTH];
+    long long_num;
+    long index_l = 0;
+    long index_s = 0;
+    table_entry *item;
+    index_l = skip_spaces(line.content, index_l);
+
+    if (line.content[index_l] == '.') {
+        /*if it's mdefind we add it to the symbol table*/
+        if (strncmp(".define", line.content, 6) == 0) {
+            index_l += 7;
+            index_l = skip_spaces(line.content, index_l);
+            index_s = 0;
+            while (line.content[index_l] && line.content[index_l] != ' ' && line.content[index_l] != '=' && line.content[index_l] != '\n' && line.content[index_l] != EOF && index_l <= MAX_LINE_LENGTH){
+                token[index_s] = line.content[index_l];
+                symbol[index_s] = line.content[index_l];
+                index_l++;
+                index_s++;
+            }
+            token[index_s] = '\0';
+            symbol[index_s] = '\0';
+            /* if label is already marked as mdefine, ignore. */
+            if (token == NULL) {
+                printf("You have to specify a label name for .define");
+                return FALSE;
+            }
+            if (!check_label_name(token)) {
+                printf("Iligal name");
+                return FALSE;
+            }
+            index_l = skip_spaces(line.content, index_l);
+            if (line.content[index_l] != '=') {
+                printf("Error: '=' not found in the input string.\n");
+                return FALSE;
+            }
+            index_l++;
+            index_l = skip_spaces(line.content, index_l);
+            index_s = 0;
+            while (line.content[index_l] && line.content[index_l] != ' ' && line.content[index_l] != '\n' && line.content[index_l] != EOF && index_l <= MAX_LINE_LENGTH){
+                num[index_s] = line.content[index_l];
+                index_l++;
+                index_s++;
+            }    
+            num[index_s] = '\0';
+            if (num == NULL) {
+                printf("Error: Number not found after '='.\n");
+                return FALSE;
+            }
+            if (!check_if_digit(num)) {
+                printf("It isn't a digit");
+                return FALSE;
+            }
+            index_l = skip_spaces(line.content, index_l);
+            
+            if (!line.content[index_l]) {
+                printf("Error: Unexpected characters after the number.\n");
+                return FALSE;
+            }
+              
+            item = find_by_types(*symbol_table, token);
+            
+            if (item) {
+                if (item->type == MDEFINE_SYMBOL) {
+                printf("You cannot define a mdefine type more than once with the same name.");
+                return FALSE;
+                }
+                else {
+                    printf("You cannot define type define and instruction with the same name.");
+                    return FALSE;
+                }
+            }
+            long_num = atoi(num);
+            add_table_item(symbol_table, token, long_num, MDEFINE_SYMBOL);
+            return TRUE;     
+        }
+        return TRUE;
+    }
+    return TRUE;
+}
+
+
 
 /*Checks if the new lable if is OK*/
 /*checks the length of the label*/
@@ -136,6 +221,23 @@ bool check_if_digit(char *string) {
 }
 
 
-
+void free_code_image(machine_word **code_image, long fic) {
+	long i;
+	/* for each not-null cell (we might have some "holes", so we won't stop on first null) */
+	for (i = 0; i < fic; i++) {
+		machine_word *curr_word = code_image[i];
+		if (curr_word != NULL) {
+			/* free code/data word */
+			if (curr_word->length > 0) {
+				free(curr_word->word.code);
+			} else {
+				free(curr_word->word.data);
+			}
+			/* free the pointer to the union */
+			free(curr_word);
+			code_image[i] = NULL;
+		}
+	}
+}
 
 

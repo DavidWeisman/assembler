@@ -2,7 +2,7 @@
 #define _UTILS_H
 
 #include "globals.h"
-
+#include "table.h"
 /**
  * Adds extension to the name of the file
  * Connects to strings
@@ -67,5 +67,12 @@ bool check_label_name(char *label_name);
 */
 bool check_if_digit(char *string);
 
+/**
+ * Frees all the dynamically-allocated memory for the code image.
+ * @param code_image A pointer to the code images buffer
+ * @param fic The final instruction counter value
+ */
+void free_code_image(machine_word **code_image, long fic);
 
+bool check_mdefine(line_info line, table *symbol_table, char *symbol);
 #endif

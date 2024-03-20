@@ -18,7 +18,7 @@
  * @param code_img The code image array
  * @return Whether succeeded or notssss
  */
-static bool process_code(line_info line, int index_l, long *ic, machine_word **code_img);
+static bool process_code(line_info line, int index_l, long *ic, machine_word **code_img, table symbol_table);
 
 /*Processes a single line in the first pass*/
 bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_img, long *data_img, table *symbol_table) {
@@ -28,13 +28,18 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
     instruction currentInstruction;                 
 
     index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
-
+    
     /*Cheaks if the line is empty or a comment line*/
     /*If it does return 1 - no error*/
     if (!line.content[index_l] || line.content[index_l] == '\n' || line.content[index_l] == EOF || line.content[index_l] == ';'){
         return TRUE;
     } 
-
+    if (!check_mdefine(line, symbol_table, symbol)){
+        return FALSE;
+    }
+    else if (find_by_types(*symbol_table, symbol) && find_by_types(*symbol_table, symbol)->type == MDEFINE_SYMBOL) {
+        return TRUE;
+    }
     /* Cheks the label*/
     /* Returns an error in case of tried to defind label, but it's invalid*/
     if(extract_label(line, symbol)){
@@ -46,7 +51,7 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
         printf("Illegal label name: %s", symbol);
         return FALSE;
     }
-
+    
     /*If symbol detected, start analyzing from it's deceleration end*/
     if(symbol[0] != '\0'){
         while (line.content[index_l] != ':'){
@@ -126,7 +131,7 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
             add_table_item(symbol_table, symbol, *IC, CODE_SYMBOL);
         }
         /* Analyze code */
-        return process_code(line, index_l, IC, code_img);
+        return process_code(line, index_l, IC, code_img, *symbol_table);
     }
     return TRUE;
 }
@@ -137,8 +142,9 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
  * @param code_img The current code image
  * @param ic The current instruction counter
  * @param operand the operand to check
+ * @param is_src_operand If the operand is a source operand
 */
-static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand);
+static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand, bool is_src_operand);
 
 
 /**
@@ -151,7 +157,7 @@ static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *
  * @param code_img The code image array
  * @return Whether succeeded or notssss
  */
-static bool process_code(line_info line, int index_l, long *ic, machine_word **code_img) {
+static bool process_code(line_info line, int index_l, long *ic, machine_word **code_img, table symbol_table) {
     char operation[8]; /* stores the string of the current code instruction */
 	char *operands[2]; /* 2 strings, each for operand */
 	opcode curr_opcode;
@@ -170,7 +176,7 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
         index_o++;
     }
     operation[index_o] = '\0'; /* End of string */
-
+    
     /* Get opcode into curr_opcode */
     get_opcode(operation, &curr_opcode);
 
@@ -179,11 +185,12 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
         printf("Unrecognized instruction");
         return FALSE;
     }
-
+    
     /* Separate operands and get their count */
-    if (!analyze_operands(line, index_l, operands, &operand_count, operation))  {
+    if (!analyze_operands(line, index_l, operands, &operand_count, operation, symbol_table))  {
 		return FALSE;
 	}
+    
     /* Build the code word */
     codeword = get_code_word(line, curr_opcode, operand_count, operands);
     if (codeword == NULL) {
@@ -198,7 +205,7 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
     }
     /* ic is in position of a new code word*/
     ic_before = *ic;
-
+   
     /* allocate memory for a new word in the code image, and put the code word into it */
     word_to_write = (machine_word *)malloc(sizeof(machine_word));
     if (word_to_write == NULL) {
@@ -210,10 +217,10 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
 
     /* Build extra information code word if possible, free pointers with no need */
     if (operand_count--) { /* If there's 1 operand at least */
-        build_extra_codeword_fpass(code_img, ic, operands[0]);
+        build_extra_codeword_fpass(code_img, ic, operands[0], TRUE);
         free(operands[0]);
         if (operand_count) { /* If there are 2 operands */
-            build_extra_codeword_fpass(code_img, ic, operands[1]);
+            build_extra_codeword_fpass(code_img, ic, operands[1], FALSE);
             free(operands[1]);
         }
     }
@@ -227,23 +234,29 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
 }
 
 
-static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand) {
+static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand, bool is_src_operand) {
     addressing_type operand_addr = get_addressing_type(operand);
-
-    if (operand_addr != NONE_ADDR && operand_addr != REGISTER_ADDR) {
+    if (operand_addr != NONE_ADDR) {
         (*ic)++;
-        if (operand_addr == IMMEDIATE_ADDR) {
+        if (operand_addr == IMMEDIATE_ADDR || operand_addr == REGISTER_ADDR) {
             char *ptr;
             machine_word *word_to_write;
-
-            long value = strtol(operand + 1, &ptr, 10);
+            long value;
+            if (operand_addr == IMMEDIATE_ADDR) {
+                value = strtol(operand + 1, &ptr, 10);
+            }
+            else {
+                value = get_register_by_name(operand);
+            }
+            
             word_to_write = (machine_word *)malloc(sizeof(machine_word));
             if (word_to_write == NULL) {
                 printf("Memory allocation failed");
                 exit(1);
             }
+            
             word_to_write->length = 0; /* Not Code word! */
-            (word_to_write->word).data = build_data_word(IMMEDIATE_ADDR, value, FALSE);
+            (word_to_write->word).data = build_data_word(operand_addr, value, FALSE, is_src_operand);
             code_img[(*ic) - IC_INIT_VALUE] = word_to_write; /* Avoid "spending" cells of the array, by starting from initial value of ic */
         }
     }

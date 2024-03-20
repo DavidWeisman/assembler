@@ -65,11 +65,12 @@ bool check_item_name(char *table_name, char *new_name){
 
 /* Find a table item by a type */
 table_entry *find_by_types(table tab, char *name){
+    
     /* If the table is empty, there is nothing to find*/
     if (tab == NULL){
         return NULL;
     }
-
+    
     /* Gose over all the table, and checks if the type is valid and have the same name*/
     do {
         switch (tab->type) {
@@ -98,12 +99,39 @@ table_entry *find_by_types(table tab, char *name){
                     return tab;
                 }
                 break;
+            case MDEFINE_SYMBOL:
+                if (check_item_name(tab->name, name)) {
+                    return tab;
+                }
+                break;
         }
 	} while ((tab = tab->next) != NULL);
-
+    
     /* NO item was found*/
     return NULL;
     
+}
+
+void free_table(table tab) {
+	table prev_entry, curr_entry = tab;
+	while (curr_entry != NULL) {
+		prev_entry = curr_entry;
+		curr_entry = curr_entry->next;
+		free(prev_entry->name); /* Didn't forget you!ssss */
+		free(prev_entry);
+	}
+}
+
+
+table filter_table_by_type(table tab, symbol_type type) {
+	table new_table = NULL;
+	/* For each entry, check if has the type. if so, insert to the new table. */
+	do {
+		if (tab->type == type) {
+			add_table_item(&new_table, tab->name, tab->value, tab->type);
+		}
+	} while ((tab = tab->next) != NULL);
+	return new_table; /* It holds a pointer to the first entry, dynamically-allocated, so it's fine (not in stack) */
 }
 
 

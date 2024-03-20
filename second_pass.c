@@ -16,11 +16,10 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
  * @return True of false if the process succeeded or not
 */
 bool process_line_spass(line_info line, long *ic, machine_word **code_img, table *symbol_table) {
-
     char *index_of_colon;
     char *token;
     long index_l = 0;
-
+    
     index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
 
     /* Cheaks if the line is empty or a comment line */
@@ -58,7 +57,7 @@ bool process_line_spass(line_info line, long *ic, machine_word **code_img, table
 
                 /* If the symbol isn't defined as data or code */
                 item = find_by_types(*symbol_table, token);
-                if (item->type != DATA_SYMBOL || item != CODE_SYMBOL) {
+                if (item->type != DATA_SYMBOL && item->type != CODE_SYMBOL) {
                     
                     /* If defined as external */
                     item = find_by_types(*symbol_table, token);
@@ -66,7 +65,7 @@ bool process_line_spass(line_info line, long *ic, machine_word **code_img, table
                         printf("The symbol can be either external or entry, but not both.");
                         return FALSE;
                     }
-                    printf("The symbol for .entry is undefined.");
+                    printf("The symbol for .entry is undefined.\n");
                     return FALSE;
                 }
                 /* otherwise print more general error */
@@ -118,7 +117,7 @@ bool add_symbols_to_code(line_info line, long *ic, machine_word **code_img, tabl
         index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
 
         /* now analyze operands We send NULL as string of command because no error will be printed, and that's the only usage for it there. */
-        analyze_operands(line, index_l, operands, &operand_count, NULL);
+        analyze_operands(line, index_l, operands, &operand_count, NULL, *symbol_table);
 
         /* Process operands, if needed. if failed return failure. otherwise continue */
         if (operand_count--) {
@@ -157,14 +156,15 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
     machine_word *word_to_write;
 
     /* if the word on *IC has the immediately addressed value (done in first pass), go to next cell (increase ic) */
-    if (addr == IMMEDIATE_ADDR) {
+    if (addr == IMMEDIATE_ADDR || addr == REGISTER_ADDR) {
         (*curr_ic)++;
     }
+    
     if (DIRECT_ADDR == addr || INDEX_FIXED_ADDR == addr) {
         long data_to_add;
         table_entry *item = find_by_types(*symbol_table, operand);
         if (item == NULL) {
-            printf("The symbol not found");
+            printf("The symbol not found %s, %d, %d\n", operand, line.line_number, addr);
             return FALSE;
         }
         /* The symbol found*/
@@ -190,7 +190,7 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
             return FALSE;
         }
         word_to_write->length = 0;
-        word_to_write->word.data = build_data_word(addr, data_to_add, item->type == EXTERNAL_SYMBOL);
+        word_to_write->word.data = build_data_word(addr, data_to_add, item->type == EXTERNAL_SYMBOL, FALSE);
         code_img[(++(*curr_ic)) - IC_INIT_VALUE] = word_to_write;
     }
     return TRUE;

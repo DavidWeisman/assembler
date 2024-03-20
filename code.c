@@ -97,8 +97,9 @@ addressing_type get_addressing_type(char *operand) {
         return DIRECT_ADDR;
     }
     /* If first string is a valid labbel name, then the next char is '[', then the next stirng is a valid digit, then if the next char is '[', and if the last char is end of string, it's Index fixed addressed*/
-    else if (operand[0] == '\0') {
+    else if (strchr(operand, '[') && strchr(operand, ']')) {
         /* Check if in the operand there is '['*/
+        
         open_bracket = strchr(operand, '[');
         if (!open_bracket) {
             return NONE_ADDR;
@@ -141,13 +142,48 @@ addressing_type get_addressing_type(char *operand) {
     }
 }
 
+void convert_defind(char *string, table symbol_table){
+    int index_s = 0;
+    int index_d = 0;
+    char temp[MAX_LINE_LENGTH];
+    table_entry *item;
+    index_s = skip_spaces(string, index_s);
+    index_s++;
+    while (string[index_s]) {
+        temp[index_d] = string[index_s];
+        index_d++;
+        index_s++;
+    }
+    temp[index_d] = '\0';
+   
+    
+    item = find_by_types(symbol_table, temp);
+    if (item && item->type == MDEFINE_SYMBOL) {
+        
+        string[0] = '#';
+        
+        sprintf(string + 1, "%ld",  item->value);
+        
+        index_s = 1;
+        if (string[index_s] == '-' || string[index_s] == '+') {
+            index_s++;
+        }
+        while (isdigit(string[index_s])){
+            index_s++;
+        }
+        string[index_s] = '\0';
+        
+    }
+    
+}
+
 /* Analyze the given operands*/
-bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation) {
+bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation, table symbol_table) {
     int index_o = 0;
     *operand_count = 0;
     destination[0] = NULL;
     destination[1] = NULL;
-
+     
     index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
     if (line.content[index_l] == ',') {
         printf("Unexpected comma after command.");
@@ -171,6 +207,8 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
         }
         index_o = 0; 
         /* as long we're still on same operand */
+        
+        
         while (line.content[index_l] && line.content[index_l] != '\t' && line.content[index_l] != ' ' && line.content[index_l] != '\n' && line.content[index_l] != EOF && line.content[index_l] != ',') {
             destination[*operand_count][index_o] = line.content[index_l];
             index_l++;
@@ -196,9 +234,8 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
             return FALSE;
         }
         index_l++;
-
+        
         index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
-
         /* if there was just a comma, then (optionally) white char(s) and then end of line */
         if (line.content[index_l] == '\n' || line.content[index_l] == EOF || !line.content[index_l]) {
             printf("Missing operand after comma.");
@@ -208,13 +245,30 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
         }
         else continue;  /* No errors, continue */
         {
+            
             free(destination[0]);
             if (*operand_count > 1) {
 				free(destination[1]);
 			}
 			return FALSE;
         }
+        
+        
     }
+    
+    if (*operand_count == 1) {
+        if (destination[0][0] == '#'){
+            
+            convert_defind(destination[0], symbol_table);
+        }
+        
+    }
+    if (*operand_count == 2) {
+        if (destination[1][0] == '#'){
+            convert_defind(destination[1], symbol_table);
+        }
+    }
+     
     return TRUE;
 }
 
@@ -237,10 +291,10 @@ bool validate_operand_by_opcode(line_info line, addressing_type first_addresing,
 
         /* Checks if the addressing are valid */
         if (curr_opcode == MOV_OP || curr_opcode == ADD_OP || curr_opcode == SUB_OP) {
-            if (!validate_op_addr(first_addresing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR)) {
+            if (!validate_op_addr(first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR)) {
                 return FALSE;
             }
-            return validate_op_addr(second_addressing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR);
+            return validate_op_addr(second_addressing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR);
         }
         else if (curr_opcode == CMP_OP) {
             if (!validate_op_addr(first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR)) {
@@ -249,10 +303,10 @@ bool validate_operand_by_opcode(line_info line, addressing_type first_addresing,
             return  validate_op_addr(second_addressing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR);
         }
         else if (curr_opcode == LEA_OP) {
-            if (!validate_op_addr(first_addresing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR)) {
+            if (!validate_op_addr(first_addresing, 2, DIRECT_ADDR, INDEX_FIXED_ADDR, NONE_ADDR, NONE_ADDR)) {
                 return FALSE;
             }
-            return validate_op_addr(second_addressing, 2, DIRECT_ADDR, INDEX_FIXED_ADDR, NONE_ADDR, NONE_ADDR);
+            return validate_op_addr(second_addressing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR);
         }
     }
     else if (curr_opcode == NOT_OP || curr_opcode == CLR_OP || (curr_opcode >= INC_OP && curr_opcode <= JSR_OP)) {
@@ -288,21 +342,16 @@ bool validate_operand_by_opcode(line_info line, addressing_type first_addresing,
 /* Gets the code word*/
 code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char *operands[2]) {
     code_word *codeword;
-    addressing_type first_addr = NONE_ADDR;
-    addressing_type second_addr = NONE_ADDR;
-
+   
     /* Gets the addressing types */
-    if (op_count >= 1) {
-        first_addr = get_addressing_type(operands[0]);
-    }
-    if (op_count == 2) {
-        second_addr = get_addressing_type(operands[1]);
-    }
-    
+    addressing_type first_addr = op_count >= 1 ? get_addressing_type(operands[0]) : NONE_ADDR;
+    addressing_type second_addr = op_count == 2 ? get_addressing_type(operands[1]) : NONE_ADDR;
+
+  
     if (!validate_operand_by_opcode(line, first_addr, second_addr, curr_opcode, op_count)) {
         return NULL;
     }
-
+   
     /* Allocate memory for the codeword*/
     codeword = (code_word *)malloc(sizeof(code_word));
     if (codeword == NULL) {
@@ -315,9 +364,9 @@ code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char 
     codeword->ARE = 0;
 
     /* Default values for the addressign */
-    codeword->dest_addressing = NONE_ADDR;
-    codeword->src_addressing = NONE_ADDR;
-
+    codeword->dest_addressing = 0;
+    codeword->src_addressing = 0;
+   
     /* Sets the addressing types */
     if (curr_opcode == LEA_OP || (curr_opcode >= MOV_OP && curr_opcode <= SUB_OP)) {
         codeword->src_addressing = first_addr;
@@ -352,7 +401,7 @@ static bool validate_op_addr(addressing_type op_addressing, int number_of_addrs,
 }
 
 
-data_word *build_data_word(addressing_type addressing, long data, bool is_extern_symbol) {
+data_word *build_data_word(addressing_type addressing, long data, bool is_extern_symbol, bool is_src_operand) {
     signed long mask; /* For bitwise operations for data conversion */
     unsigned long ARE = 0;
     unsigned long mask_un;
@@ -371,12 +420,16 @@ data_word *build_data_word(addressing_type addressing, long data, bool is_extern
             ARE = 2;
         }
     }
+    if (addressing == REGISTER_ADDR) {
+        if (is_src_operand) {
+            data <<= 3;
+        }
+    }
     dataword->ARE = ARE; /* Set ARE field value */
-
     /* Now all left is to encode the data */
 	mask = -1;
 	mask_un = mask; /* both hold 11...11 */
-	mask_un >>= 11; /* Now mask_un holds 0..001111....111, 11 zeros and 21 ones */
+	mask_un >>= 20; /* Now mask_un holds 0..001111....111, 11 zeros and 21 ones */
 	dataword->data = mask_un & data; /* Now just the 21 lsb bits area left and assigned to data field. */
 	return dataword;
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "writefiles.h"
 #include "first_pass.h"
 #include "second_pass.h"
 #include "globals.h"
@@ -11,9 +12,10 @@
 /*
 Things to fix
 
------ cmp r3, #sz -> #sz
------ LIST: .data 6, -9, len -> len
------- MAIN: mov r3, LIST[sz] -> sz
+1- arrays
+2- .defind
+3- macro
+
 
 */
 
@@ -97,6 +99,7 @@ bool handel_singel_file(char *file_name) {
                 }
             }  
         }
+        current_line.line_number++;
     }
     
     /* Saves ICF and DCF*/
@@ -120,15 +123,25 @@ bool handel_singel_file(char *file_name) {
             if (code_img[ic - IC_INIT_VALUE] != NULL || temp_line[index_l] == '.') {
                 is_success &= process_line_spass(current_line, &ic, code_img, &symbol_table);
             }
+            current_line.line_number++;
         }
+
+        /* Write files if second pass succeeded */
+		if (is_success) {
+			/* Everything was done. Write to *filename.ob/.ext/.ent */
+			is_success = write_output_files(code_img, data_img, icf, dcf, file_name, symbol_table);
+		}
     }
-    printf("all good");
-
-
-  
+    /* Now let's free some pointer: */
+	/* current file name */
+	free(input_filename);
+	/* Free symbol table */
+	free_table(symbol_table);
+	/* Free code & data buffer contents */
+	free_code_image(code_img, icf);
 
 	/* return whether every assembling succeeded */
-    return is_success;
+	return is_success;
 }
 
 
