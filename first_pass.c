@@ -89,6 +89,9 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
         if ((currentInstruction == DATA_INST || currentInstruction == STRING_INST) && symbol[0] != '\0'){
             
             /* If it's data or string, add DC with the symbol to the table as data*/
+            if(currentInstruction == STRING_INST) {
+                add_table_item(symbol_table, symbol, *DC - 1, DATA_SYMBOL);
+            }
             add_table_item(symbol_table, symbol, *DC, DATA_SYMBOL);
         }
 
@@ -98,7 +101,7 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
         }
         /*If it is a data, encode into data image and increase dc as needed*/
         else if(currentInstruction == DATA_INST){
-            return process_data_instruction(line, index_l, data_img, DC); 
+            return process_data_instruction(line, index_l, data_img, DC, *symbol_table); 
         }
         /* if external symbol detected, start analyzing from it's deceleration end */
         else if (currentInstruction == EXTERN_INST) {
@@ -144,8 +147,9 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
  * @param operand the operand to check
  * @param is_src_operand If the operand is a source operand
 */
-static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand, bool is_src_operand);
+static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand, bool is_src_operand, table symbol_table);
 
+static void build_extra_codeword_fpass_reg(machine_word **code_img, long *ic, char **operands, table symbol_table);
 
 /**
  *  Processes a single code line in the first pass.
@@ -166,6 +170,7 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
     int index_o = 0;
     int operand_count;
     machine_word *word_to_write;
+
 
     index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
     
@@ -192,7 +197,7 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
 	}
     
     /* Build the code word */
-    codeword = get_code_word(line, curr_opcode, operand_count, operands);
+    codeword = get_code_word(line, curr_opcode, operand_count, operands, symbol_table);
     if (codeword == NULL) {
         /* If there where any erroe in the building release teh allocated memory of the operans*/
         if (operands[0]) {
@@ -205,7 +210,7 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
     }
     /* ic is in position of a new code word*/
     ic_before = *ic;
-   
+    
     /* allocate memory for a new word in the code image, and put the code word into it */
     word_to_write = (machine_word *)malloc(sizeof(machine_word));
     if (word_to_write == NULL) {
@@ -215,27 +220,62 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
     (word_to_write->word).code = codeword;
     code_img[(*ic) - IC_INIT_VALUE] = word_to_write; /* Avoid "spending" cells of the array, by starting from initial value of ic */
 
-    /* Build extra information code word if possible, free pointers with no need */
+
+
+    if (operand_count == 2) {
+        if (get_addressing_type(operands[0], symbol_table) == REGISTER_ADDR) {
+            if (get_addressing_type(operands[1], symbol_table) == REGISTER_ADDR) {
+                build_extra_codeword_fpass_reg(code_img, ic, operands, symbol_table);
+                free(operands[0]);
+                free(operands[1]);
+                operand_count = 0;
+            }   
+        }
+    }
     if (operand_count--) { /* If there's 1 operand at least */
-        build_extra_codeword_fpass(code_img, ic, operands[0], TRUE);
+    /* Build extra information code word if possible, free pointers with no need */
+        build_extra_codeword_fpass(code_img, ic, operands[0], TRUE, symbol_table);
         free(operands[0]);
         if (operand_count) { /* If there are 2 operands */
-            build_extra_codeword_fpass(code_img, ic, operands[1], FALSE);
+            build_extra_codeword_fpass(code_img, ic, operands[1], FALSE, symbol_table);
             free(operands[1]);
         }
     }
-
+    
     (*ic)++; /* increase ic to point the next cell */
 
     /* Add the final length (of code word + data words) to the code word struct: */
     code_img[ic_before - IC_INIT_VALUE]->length = (*ic) - ic_before;
-
     return TRUE; /* No errors */
 }
 
 
-static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand, bool is_src_operand) {
-    addressing_type operand_addr = get_addressing_type(operand);
+static void build_extra_codeword_fpass_reg(machine_word **code_img, long *ic, char **operands, table symbol_table) {
+    char *ptr;
+    machine_word *word_to_write;
+    long first_value;
+    long second_value;
+    
+    (*ic)++;
+    first_value = strtol(operands[0] + 1, &ptr, 10);
+    second_value = strtol(operands[1] + 1, &ptr, 10);
+
+    word_to_write = (machine_word *)malloc(sizeof(machine_word));
+    if (word_to_write == NULL) {
+        printf("Memory allocation failed");
+        exit(1);
+    }
+    else {
+        word_to_write->length = 0; /* Not Code word! */
+        (word_to_write->word).data = build_data_word_reg(first_value, second_value);
+        code_img[(*ic) - IC_INIT_VALUE] = word_to_write; /* Avoid "spending" cells of the array, by starting from initial value of ic */
+    }
+}
+
+
+
+static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand, bool is_src_operand, table symbol_table) {
+    addressing_type operand_addr = get_addressing_type(operand, symbol_table);
     if (operand_addr != NONE_ADDR) {
         (*ic)++;
         if (operand_addr == IMMEDIATE_ADDR || operand_addr == REGISTER_ADDR) {
@@ -254,10 +294,14 @@ static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *
                 printf("Memory allocation failed");
                 exit(1);
             }
-            
-            word_to_write->length = 0; /* Not Code word! */
-            (word_to_write->word).data = build_data_word(operand_addr, value, FALSE, is_src_operand);
-            code_img[(*ic) - IC_INIT_VALUE] = word_to_write; /* Avoid "spending" cells of the array, by starting from initial value of ic */
+            else {
+                word_to_write->length = 0; /* Not Code word! */
+                (word_to_write->word).data = build_data_word(operand_addr, value, FALSE, is_src_operand);
+                code_img[(*ic) - IC_INIT_VALUE] = word_to_write; /* Avoid "spending" cells of the array, by starting from initial value of ic */
+            }
+        }
+        if (operand_addr == INDEX_FIXED_ADDR){
+            (*ic)++;
         }
     }
 }

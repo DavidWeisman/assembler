@@ -11,6 +11,21 @@
  */
 #define KEEP_ONLY_21_LSB(value) ((value) & 0x1FFFFF)
 
+
+
+void print_binary(long value) {
+    /* Mask for checking each bit */
+	int i;
+    /* Loop through each bit and print it */
+    for (i = 13; i >= 0; i--) {
+        printf("%ld", (value >> i) & 1); /* Shift and mask the bit */
+    }
+	printf("\n");
+}
+
+
+
+
 /**
  * Writes the code and data image into an .ob file, with lengths on top
  * @param code_img The code image
@@ -68,7 +83,7 @@ static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf
 
     /* starting from index 0, not IC_INIT_VALUE as icf, so we have to subtract it. */
 	for (i = 0; i < icf - IC_INIT_VALUE; i++) {
-        printf("%d. opcode: %d, src: %d, dest: %d, ARE: %d\n", i, code_img[i]->word.code->opcode, code_img[i]->word.code->src_addressing, code_img[i]->word.code->dest_addressing, code_img[i]->word.code->ARE);
+        /*printf("%d. opcode: %d, src: %d, dest: %d, ARE: %d\n", i, code_img[i]->word.code->opcode, code_img[i]->word.code->src_addressing, code_img[i]->word.code->dest_addressing, code_img[i]->word.code->ARE);*/
 		if (code_img[i]->length > 0) {
 			val = (code_img[i]->word.code->opcode << 6) | (code_img[i]->word.code->src_addressing << 4) |
 			      (code_img[i]->word.code->dest_addressing << 2) | (code_img[i]->word.code->ARE);
@@ -77,6 +92,8 @@ static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf
 			val = (KEEP_ONLY_21_LSB(code_img[i]->word.data->data) << 2) | (code_img[i]->word.data->ARE);
 		}
 		/* Write the value to the file - first */
+		printf("%.7d\t", i + 100);
+		print_binary(val);
 		fprintf(file_desc, "\n%.7d %.6lx", i + 100, val);
 	}
     /* Write data image. dcf starts at 0 so it's fine */
@@ -84,6 +101,8 @@ static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf
 		/* print only lower 24 bytes */
 		val = KEEP_ONLY_24_LSB(data_img[i]);
 		/* print at least 6 digits of hex, and 7 digits of dc */
+		printf("%.7d\t", icf + i);
+		print_binary(val);
 		fprintf(file_desc, "\n%.7ld %.6lx", icf + i, val);
 	}
 

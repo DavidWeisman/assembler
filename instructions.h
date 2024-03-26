@@ -28,5 +28,5 @@ bool process_string_instruction(line_info line, int index_l, long *data_img, lon
  * @param dc The current data counter
  * @return True or false if succeeded or not
 */
-bool process_data_instruction(line_info line, int index_l, long *data_img, long *dc);
+bool process_data_instruction(line_info line, int index_l, long *data_img, long *dc, table symbol_table);
 #endif

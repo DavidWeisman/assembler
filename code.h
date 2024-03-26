@@ -22,8 +22,7 @@ void get_opcode(char *name, opcode *opcode_out);
  * @param operand The pinter to the string of the operand
  * @return The addressing type of an operand
 */
-addressing_type get_addressing_type(char *operand);
-
+addressing_type get_addressing_type(char *operand, table symbol_table);
 
 /**
  * Checks and builds the code word by the opcode, operand count and operand strings
@@ -33,7 +32,7 @@ addressing_type get_addressing_type(char *operand);
  * @param operands An array of two cell of opinters to first and second operands
  * @return A pointer to the codeword, if there is an erroe return NULL
 */
-code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char *operands[2]);
+code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char *operands[2], table symbol_table);
 
 /**
  * Separates the operands from the given index, puts each of the operands into the destination array, and puts the number of the operands into the count argument
@@ -55,4 +54,9 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
  * @return A pointer to the new data word 
 */
 data_word *build_data_word(addressing_type addressing, long data, bool is_extern_symbol, bool is_dest_operand);
+
+
+data_word *build_data_word_reg(long first_data, long second_data);
+
+void convert_defind(char *string, table symbol_table, int num);
 #endif

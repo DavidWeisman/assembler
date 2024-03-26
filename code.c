@@ -74,7 +74,7 @@ reg get_register_by_name(char *name) {
 	return NONE_REG; /* No match */
 }
 
-addressing_type get_addressing_type(char *operand) {
+addressing_type get_addressing_type(char *operand, table symbol_table) {
     /* Variables of the Index fixed addressed check*/
     char label_name[31]; /* The place where the label name saved*/
     char *open_bracket; /* Pointer to the open bracket in the operand*/
@@ -133,7 +133,9 @@ addressing_type get_addressing_type(char *operand) {
         number[num_len] = '\0'; /* End of string*/
         /*Checks if it's a valid number*/
         if (!check_if_digit(number)) {
-            return NONE_ADDR;
+            if (find_by_types(symbol_table, number) && find_by_types(symbol_table, number)->type != MDEFINE_SYMBOL) {
+                return NONE_ADDR;
+            }
         }
         return INDEX_FIXED_ADDR;
     }
@@ -142,29 +144,40 @@ addressing_type get_addressing_type(char *operand) {
     }
 }
 
-void convert_defind(char *string, table symbol_table){
-    int index_s = 0;
-    int index_d = 0;
-    char temp[MAX_LINE_LENGTH];
+void convert_defind(char *string, table symbol_table, int num){
+    int index_s = 0;    /* Index of the input string*/
+    int index_c = 0;    /* Index of the label_copy */
+    char label_copy[MAX_LINE_LENGTH]; /* copy of the label*/
     table_entry *item;
-    index_s = skip_spaces(string, index_s);
-    index_s++;
-    while (string[index_s]) {
-        temp[index_d] = string[index_s];
-        index_d++;
+    index_s = skip_spaces(string, index_s); /*Skips all the spaces or tabs*/ 
+    if (string[0] == '#') {
         index_s++;
     }
-    temp[index_d] = '\0';
-   
     
-    item = find_by_types(symbol_table, temp);
+
+    /* Copys the label name in to temp_str*/
+    while (string[index_s]) {
+        label_copy[index_c] = string[index_s];
+        index_c++;
+        index_s++;
+    }
+    label_copy[index_c] = '\0';
+    
+    /* checks if it's a mdefine */
+    item = find_by_types(symbol_table, label_copy);
     if (item && item->type == MDEFINE_SYMBOL) {
+        /* If it does, 5t nfd*/
+        index_s = 0;
+        if (num == 0) {
+            string[0] = '#';
+            index_s = 1;
+            sprintf(string + 1, "%ld",  item->value);
+        }
+        else {
+            sprintf(string, "%ld",  item->value);
+        }
         
-        string[0] = '#';
         
-        sprintf(string + 1, "%ld",  item->value);
-        
-        index_s = 1;
         if (string[index_s] == '-' || string[index_s] == '+') {
             index_s++;
         }
@@ -259,13 +272,13 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
     if (*operand_count == 1) {
         if (destination[0][0] == '#'){
             
-            convert_defind(destination[0], symbol_table);
+            convert_defind(destination[0], symbol_table, 0);
         }
         
     }
     if (*operand_count == 2) {
         if (destination[1][0] == '#'){
-            convert_defind(destination[1], symbol_table);
+            convert_defind(destination[1], symbol_table, 0);
         }
     }
      
@@ -340,12 +353,12 @@ bool validate_operand_by_opcode(line_info line, addressing_type first_addresing,
 }
 
 /* Gets the code word*/
-code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char *operands[2]) {
+code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char *operands[2], table symbol_table) {
     code_word *codeword;
    
     /* Gets the addressing types */
-    addressing_type first_addr = op_count >= 1 ? get_addressing_type(operands[0]) : NONE_ADDR;
-    addressing_type second_addr = op_count == 2 ? get_addressing_type(operands[1]) : NONE_ADDR;
+    addressing_type first_addr = op_count >= 1 ? get_addressing_type(operands[0], symbol_table) : NONE_ADDR;
+    addressing_type second_addr = op_count == 2 ? get_addressing_type(operands[1], symbol_table) : NONE_ADDR;
 
   
     if (!validate_operand_by_opcode(line, first_addr, second_addr, curr_opcode, op_count)) {
@@ -422,7 +435,7 @@ data_word *build_data_word(addressing_type addressing, long data, bool is_extern
     }
     if (addressing == REGISTER_ADDR) {
         if (is_src_operand) {
-            data <<= 3;
+            data <<= 3; 
         }
     }
     dataword->ARE = ARE; /* Set ARE field value */
@@ -431,5 +444,28 @@ data_word *build_data_word(addressing_type addressing, long data, bool is_extern
 	mask_un = mask; /* both hold 11...11 */
 	mask_un >>= 20; /* Now mask_un holds 0..001111....111, 11 zeros and 21 ones */
 	dataword->data = mask_un & data; /* Now just the 21 lsb bits area left and assigned to data field. */
+	return dataword;
+}
+
+data_word *build_data_word_reg(long first_data, long second_data) {
+    signed long mask; /* For bitwise operations for data conversion */
+    unsigned long ARE = 0;
+    unsigned long mask_un;
+    long third_data;
+
+    data_word *dataword = (data_word *)malloc(sizeof(data_word));
+    if (dataword == NULL) {
+        printf("Memory allocation failed");
+        return NULL;
+    }
+
+    third_data = (first_data << 3) | second_data;
+
+    dataword->ARE = ARE; /* Set ARE field value */
+    /* Now all left is to encode the data */
+	mask = -1;
+	mask_un = mask; /* both hold 11...11 */
+	mask_un >>= 20; /* Now mask_un holds 0..001111....111, 11 zeros and 21 ones */
+	dataword->data = mask_un & third_data; /* Now just the 21 lsb bits area left and assigned to data field. */
 	return dataword;
 }

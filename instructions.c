@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "utils.h"
 #include "table.h"
+#include "code.h"
 
 /* Returns the instruction from the given index, if not found returns NONE_INST*/
 instruction find_instruction_from_index(line_info line, int *index_l) {
@@ -68,12 +69,14 @@ bool process_string_instruction(line_info line, int index_l, long *data_img, lon
             data_img[*dc] = temp_string[index_s];
             (*dc)++;
         }
+        data_img[*dc] = 0;
+        (*dc)++;
     }
     return TRUE; /* End of the process*/
 }
 
 /* Process data Instruction */
-bool process_data_instruction(line_info line, int index_l, long *data_img, long *dc){
+bool process_data_instruction(line_info line, int index_l, long *data_img, long *dc, table symbol_table){
     char temp_string[MAX_LINE_LENGTH];
     char *temp_pointer;
     long number_value;
@@ -95,6 +98,8 @@ bool process_data_instruction(line_info line, int index_l, long *data_img, long 
         }
 
         temp_string[index_n] = '\0'; /* End of string */
+
+        convert_defind(temp_string, symbol_table, 1);
 
         /* Checks if it's a ligel digit*/
         if (!check_if_digit(temp_string)) {
