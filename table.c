@@ -59,6 +59,7 @@ void add_value_to_type(table tab, long to_add, symbol_type type) {
     }
 }
 
+/* Checks if the names are same */
 bool check_item_name(char *table_name, char *new_name){
     return strcmp(table_name, new_name) == 0;
 }

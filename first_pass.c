@@ -48,7 +48,7 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
 
     /*Checks if illegal name*/
     if(symbol[0] && !check_label_name(symbol)){
-        printf("Illegal label name: %s", symbol);
+        print_error(line, "Illegal label name: %s", symbol);
         return FALSE;
     }
     
@@ -59,7 +59,7 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
         }
         index_l++;
     }
-
+    
     index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
 
     /*Only label*/
@@ -69,7 +69,7 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
     
     /*Checks if the symblol was alrady defined as data/external/cod */ 
     if (find_by_types(*symbol_table, symbol)){
-        printf("Symbol %s is already defined.", symbol);
+        print_error(line, "Symbol %s is already defined.", symbol);
         return FALSE;
     }
 
@@ -94,7 +94,7 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
             }
             add_table_item(symbol_table, symbol, *DC, DATA_SYMBOL);
         }
-
+        
         /* If it is a string, encode into data image and increase dc as needed*/
         if(currentInstruction == STRING_INST){
             return process_string_instruction(line, index_l, data_img, DC);
@@ -115,14 +115,14 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
             /* If invalid external label name, it's an error */
             symbol[index_s] = 0;
             if (!check_label_name(symbol)) {
-                printf("Invalid external label name");
+                print_error(line, "Invalid external label name: %s", symbol);
                 return TRUE;
             }
             add_table_item(symbol_table, symbol, 0, EXTERNAL_SYMBOL); /* Extern value is defaulted to 0 */
         }
         /* if entry and symbol defined, print error */
         else if (currentInstruction == ENTRY_INST && symbol[0] != '\0') {
-            printf("Can't define a label to an entry instruction.");
+            print_error(line, "Can't define a label to an entry instruction.");
             return FALSE;
         }
         /* .entry is handled in second pass! */
@@ -136,6 +136,7 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
         /* Analyze code */
         return process_code(line, index_l, IC, code_img, *symbol_table);
     }
+    
     return TRUE;
 }
 
@@ -146,9 +147,18 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
  * @param ic The current instruction counter
  * @param operand the operand to check
  * @param is_src_operand If the operand is a source operand
+ * @param symbol_table The symbol table 
 */
 static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand, bool is_src_operand, table symbol_table);
 
+/**
+ * Allocates and builds the data inside the additional code word by the given operands
+ * Only in the first pass and only for tow operands of register addresing
+ * @param code_img The current code image
+ * @param ic The current instruction counter
+ * @param operands The operands to check
+ * @param symbol_table The symbol table 
+*/
 static void build_extra_codeword_fpass_reg(machine_word **code_img, long *ic, char **operands, table symbol_table);
 
 /**
@@ -167,10 +177,9 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
 	opcode curr_opcode;
     code_word *codeword; /* The current code word */
 	long ic_before;
-    int index_o = 0;
+    int index_o = 0;  /* The index of operation, used to track the position within a operation of the input line*/
     int operand_count;
     machine_word *word_to_write;
-
 
     index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
     
@@ -184,10 +193,10 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
     
     /* Get opcode into curr_opcode */
     get_opcode(operation, &curr_opcode);
-
+    
     /* If invalid operation */
     if (curr_opcode == NONE_OP) {
-        printf("Unrecognized instruction");
+        print_error(line, "Unrecognized instruction: %s.", operation);
         return FALSE;
     }
     
@@ -220,8 +229,8 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
     (word_to_write->word).code = codeword;
     code_img[(*ic) - IC_INIT_VALUE] = word_to_write; /* Avoid "spending" cells of the array, by starting from initial value of ic */
 
-
-
+    
+    /* In case both operands have register addresing */
     if (operand_count == 2) {
         if (get_addressing_type(operands[0], symbol_table) == REGISTER_ADDR) {
             if (get_addressing_type(operands[1], symbol_table) == REGISTER_ADDR) {
@@ -232,6 +241,7 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
             }   
         }
     }
+    
     if (operand_count--) { /* If there's 1 operand at least */
     /* Build extra information code word if possible, free pointers with no need */
         build_extra_codeword_fpass(code_img, ic, operands[0], TRUE, symbol_table);
@@ -243,22 +253,22 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
     }
     
     (*ic)++; /* increase ic to point the next cell */
-
+    
     /* Add the final length (of code word + data words) to the code word struct: */
     code_img[ic_before - IC_INIT_VALUE]->length = (*ic) - ic_before;
     return TRUE; /* No errors */
 }
 
-
+/* bulds extra code word in case both operands have register addresing */
 static void build_extra_codeword_fpass_reg(machine_word **code_img, long *ic, char **operands, table symbol_table) {
-    char *ptr;
+
     machine_word *word_to_write;
     long first_value;
     long second_value;
     
     (*ic)++;
-    first_value = strtol(operands[0] + 1, &ptr, 10);
-    second_value = strtol(operands[1] + 1, &ptr, 10);
+    first_value = strtol(operands[0] + 1, NULL, 10);
+    second_value = strtol(operands[1] + 1, NULL, 10);
 
     word_to_write = (machine_word *)malloc(sizeof(machine_word));
     if (word_to_write == NULL) {
@@ -279,11 +289,10 @@ static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *
     if (operand_addr != NONE_ADDR) {
         (*ic)++;
         if (operand_addr == IMMEDIATE_ADDR || operand_addr == REGISTER_ADDR) {
-            char *ptr;
             machine_word *word_to_write;
             long value;
             if (operand_addr == IMMEDIATE_ADDR) {
-                value = strtol(operand + 1, &ptr, 10);
+                value = strtol(operand + 1, NULL, 10);
             }
             else {
                 value = get_register_by_name(operand);

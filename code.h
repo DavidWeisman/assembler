@@ -55,8 +55,19 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
 */
 data_word *build_data_word(addressing_type addressing, long data, bool is_extern_symbol, bool is_dest_operand);
 
-
+/** 
+ * Builds a data word for a line where there is two addresing from the type register
+ * @param first_data The data of the first register
+ * @param second_data The data of the second register
+ * @return A pointer to the new data word
+*/
 data_word *build_data_word_reg(long first_data, long second_data);
 
-void convert_defind(char *string, table symbol_table, int num);
+/**
+ *  Checks and Converts the mdefine items in to there numbers 
+ * @param string The string of the mdefine item
+ * @param symbol_table The symbol table
+ * @param is_immediate_addr boolean varible, if it's a immediate addresing
+ * */
+void convert_defind(char *string, table symbol_table, bool is_immediate_addr);
 #endif

@@ -6,9 +6,6 @@
 #include "code.h"
 #include "utils.h"
 
-
-
-
 /**
  * Checks the operands addressing types, prints error if needed
  * @param op_addressing The current addressing of the operand
@@ -19,9 +16,7 @@
  * @param valid_addr4 The fourth  valid addresing type for the operand 
  * @return True or false depens if the addresing type is valid or not
 */
-static bool validate_op_addr(addressing_type op_addressing, int number_of_addrs, addressing_type valid_addr1, addressing_type valid_addr2, addressing_type valid_addr3, addressing_type valid_addr4);
-
-
+static bool validate_op_addr(line_info line, addressing_type op_addressing, int number_of_addrs, addressing_type valid_addr1, addressing_type valid_addr2, addressing_type valid_addr3, addressing_type valid_addr4);
 
 /* Table element*/
 struct command_element {
@@ -144,7 +139,8 @@ addressing_type get_addressing_type(char *operand, table symbol_table) {
     }
 }
 
-void convert_defind(char *string, table symbol_table, int num){
+/* Converts the mdefin items in to there numbers */
+void convert_defind(char *string, table symbol_table, bool is_immediate_addr){
     int index_s = 0;    /* Index of the input string*/
     int index_c = 0;    /* Index of the label_copy */
     char label_copy[MAX_LINE_LENGTH]; /* copy of the label*/
@@ -154,7 +150,6 @@ void convert_defind(char *string, table symbol_table, int num){
         index_s++;
     }
     
-
     /* Copys the label name in to temp_str*/
     while (string[index_s]) {
         label_copy[index_c] = string[index_s];
@@ -168,23 +163,25 @@ void convert_defind(char *string, table symbol_table, int num){
     if (item && item->type == MDEFINE_SYMBOL) {
         /* If it does, 5t nfd*/
         index_s = 0;
-        if (num == 0) {
+        /* In case it's immediate addresing */
+        if (is_immediate_addr) {
             string[0] = '#';
             index_s = 1;
             sprintf(string + 1, "%ld",  item->value);
         }
-        else {
+        else { /* In case any other addresing */
             sprintf(string, "%ld",  item->value);
         }
         
-        
+        /* Ignoros the sign*/
         if (string[index_s] == '-' || string[index_s] == '+') {
             index_s++;
         }
+        /* Checks if it's a valid digit */
         while (isdigit(string[index_s])){
             index_s++;
         }
-        string[index_s] = '\0';
+        string[index_s] = '\0'; /* End of string */
         
     }
     
@@ -192,21 +189,21 @@ void convert_defind(char *string, table symbol_table, int num){
 
 /* Analyze the given operands*/
 bool analyze_operands(line_info line, int index_l, char **destination, int *operand_count, char *operation, table symbol_table) {
-    int index_o = 0;
+    int index_o = 0; /* Index of operand */
     *operand_count = 0;
     destination[0] = NULL;
     destination[1] = NULL;
      
     index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
     if (line.content[index_l] == ',') {
-        printf("Unexpected comma after command.");
+        print_error(line, "Unexpected comma after command.");
         return FALSE; /* an error occurred */
     }
 
     /* Until noy too many operands (max of 2) and it's not the end of the line */
     for (*operand_count = 0; line.content[index_l] != EOF && line.content[index_l] != '\n' && line.content[index_l];) {
 		if (*operand_count == 2) { /* =We already got 2 operands in, We're going ot get the third! */
-			printf("Too many operands for operation");
+			print_error(line, "Too many operands for operation (got >%d)", *operand_count);
 			free(destination[0]);
 			free(destination[1]);
 			return FALSE;   /* an error occurred */
@@ -221,14 +218,14 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
         index_o = 0; 
         /* as long we're still on same operand */
         
-        
+        /* Copys the Operands */
         while (line.content[index_l] && line.content[index_l] != '\t' && line.content[index_l] != ' ' && line.content[index_l] != '\n' && line.content[index_l] != EOF && line.content[index_l] != ',') {
             destination[*operand_count][index_o] = line.content[index_l];
             index_l++;
             index_o++;
         }
-        destination[*operand_count][index_o] = '\0';
-        (*operand_count)++;  /* We've just saved another operand! */
+        destination[*operand_count][index_o] = '\0'; /* End of string */
+        (*operand_count)++;  /* Increases the number of the operands */
 
         index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
         
@@ -237,7 +234,7 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
         }
         else if (line.content[index_l] != ',') {
             /* After operand & after white chars there's something that isn't ',' or end of line.. */
-            printf("Expecting ',' between operands");
+            print_error(line, "Expecting ',' between operands");
 
             /* Release operands dynamically allocated memory */
             free(destination[0]);
@@ -251,34 +248,32 @@ bool analyze_operands(line_info line, int index_l, char **destination, int *oper
         index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
         /* if there was just a comma, then (optionally) white char(s) and then end of line */
         if (line.content[index_l] == '\n' || line.content[index_l] == EOF || !line.content[index_l]) {
-            printf("Missing operand after comma.");
+            print_error(line, "Missing operand after comma.");
         }
         else if (line.content[index_l] == ',') {
-            printf("Multiple consecutive commas.");
+            print_error(line, "Multiple consecutive commas.");
         }
         else continue;  /* No errors, continue */
         {
-            
             free(destination[0]);
             if (*operand_count > 1) {
 				free(destination[1]);
 			}
 			return FALSE;
         }
-        
-        
     }
     
+    /* If the operands are of type mdefine */
     if (*operand_count == 1) {
         if (destination[0][0] == '#'){
             
-            convert_defind(destination[0], symbol_table, 0);
+            convert_defind(destination[0], symbol_table, TRUE);
         }
         
     }
     if (*operand_count == 2) {
         if (destination[1][0] == '#'){
-            convert_defind(destination[1], symbol_table, 0);
+            convert_defind(destination[1], symbol_table, TRUE);
         }
     }
      
@@ -298,54 +293,54 @@ bool validate_operand_by_opcode(line_info line, addressing_type first_addresing,
     if (curr_opcode == LEA_OP || (curr_opcode >= MOV_OP && curr_opcode <= SUB_OP)) {
         /* Only two operands required */
         if (op_count != 2) {
-            printf( "Operation requires 2 operands");
+            print_error(line, "Operation requires 2 operands (got %d)", op_count);
             return FALSE;
         }
 
         /* Checks if the addressing are valid */
         if (curr_opcode == MOV_OP || curr_opcode == ADD_OP || curr_opcode == SUB_OP) {
-            if (!validate_op_addr(first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR)) {
+            if (!validate_op_addr(line, first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR)) {
                 return FALSE;
             }
-            return validate_op_addr(second_addressing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR);
+            return validate_op_addr(line, second_addressing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR);
         }
         else if (curr_opcode == CMP_OP) {
-            if (!validate_op_addr(first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR)) {
+            if (!validate_op_addr(line, first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR)) {
                 return FALSE;
             }
-            return  validate_op_addr(second_addressing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR);
+            return  validate_op_addr(line, second_addressing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR);
         }
         else if (curr_opcode == LEA_OP) {
-            if (!validate_op_addr(first_addresing, 2, DIRECT_ADDR, INDEX_FIXED_ADDR, NONE_ADDR, NONE_ADDR)) {
+            if (!validate_op_addr(line, first_addresing, 2, DIRECT_ADDR, INDEX_FIXED_ADDR, NONE_ADDR, NONE_ADDR)) {
                 return FALSE;
             }
-            return validate_op_addr(second_addressing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR);
+            return validate_op_addr(line, second_addressing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR);
         }
     }
     else if (curr_opcode == NOT_OP || curr_opcode == CLR_OP || (curr_opcode >= INC_OP && curr_opcode <= JSR_OP)) {
         if (op_count != 1) {
             /* Only one operand required */
 		    if (op_count < 1) {
-                printf("Operation requires 1 operand ");
+                print_error(line, "Operation requires 1 operand (got %d)", op_count);
 			    return FALSE;
             } 
 		}
 
         /* Checks if the addressing are valid */
         if (curr_opcode == NOT_OP || curr_opcode == CLR_OP || curr_opcode == INC_OP || curr_opcode == DEC_OP || curr_opcode == RED_OP) {
-            return validate_op_addr(first_addresing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR);
+            return validate_op_addr(line, first_addresing, 3, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR, NONE_ADDR);
         }
         else if (curr_opcode == JMP_OP || curr_opcode == BNE_OP || curr_opcode == JSR_OP) {
-            return validate_op_addr(first_addresing, 2, DIRECT_ADDR, REGISTER_ADDR, NONE_ADDR, NONE_ADDR);
+            return validate_op_addr(line, first_addresing, 2, DIRECT_ADDR, REGISTER_ADDR, NONE_ADDR, NONE_ADDR);
         }
         else { /* It's PRN*/
-            return validate_op_addr(first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR);
+            return validate_op_addr(line, first_addresing, 4, IMMEDIATE_ADDR, DIRECT_ADDR, INDEX_FIXED_ADDR, REGISTER_ADDR);
         }
     }
     else if (curr_opcode == RTS_OP || curr_opcode == HLT_OP) {
         /* Zero oprerands exactly */
         if (op_count > 0) {
-			printf("Operation requires no operands");
+			print_error(line, "Operation requires no operands (got %d)", op_count);
 			return FALSE;
 		}
     }
@@ -391,7 +386,7 @@ code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char 
     return codeword;
 }
 
-static bool validate_op_addr(addressing_type op_addressing, int number_of_addrs, addressing_type valid_addr1, addressing_type valid_addr2, addressing_type valid_addr3, addressing_type valid_addr4) {
+static bool validate_op_addr(line_info line, addressing_type op_addressing, int number_of_addrs, addressing_type valid_addr1, addressing_type valid_addr2, addressing_type valid_addr3, addressing_type valid_addr4) {
     bool is_valid = FALSE; 
     int index;
     addressing_type op_valids[4]; /* Array of the valid addresing*/
@@ -407,7 +402,7 @@ static bool validate_op_addr(addressing_type op_addressing, int number_of_addrs,
         }
     }
     if (!is_valid) {
-        printf("Invalid addressing mode for first operand.\n");
+        print_error(line, "Invalid addressing mode for first operand.");
         return FALSE;
     }
     return TRUE;

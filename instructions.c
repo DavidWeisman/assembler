@@ -7,7 +7,7 @@
 
 /* Returns the instruction from the given index, if not found returns NONE_INST*/
 instruction find_instruction_from_index(line_info line, int *index_l) {
-    char currentInstruction[MAX_LINE_LENGTH];          /*--------------NEENS A NEW NAME  ---------*/
+    char currentInstruction[MAX_LINE_LENGTH];          
     int index_i = 0;    /* Indes of the instruction*/
     instruction result;
 
@@ -34,7 +34,7 @@ instruction find_instruction_from_index(line_info line, int *index_l) {
     }
 
     /* If the name of the instruction isn't currect*/
-    printf("Invalid instruction name: %s", currentInstruction);
+    print_error(line, "Invalid instruction name: %s", currentInstruction);
     return ERROR_INST;
 }
 
@@ -45,11 +45,11 @@ bool process_string_instruction(line_info line, int index_l, long *data_img, lon
     index_l = skip_spaces(line.content, index_l);  /*Skips all the spaces or tabs*/
     if (line.content[index_l] != '"') {
         /* If the instruction string isn't starts with quote*/
-        printf("Missing opening quote of string");
+        print_error(line, "Missing opening quote of string");
         return FALSE;
     }
     else if (&line.content[index_l] == last_quote_location) { /* If the last quote is in the same location as the first one*/
-        printf("Missing closing quote of string");
+        print_error(line, "Missing closing quote of string");
         return FALSE;
     }
     else {
@@ -85,7 +85,7 @@ bool process_data_instruction(line_info line, int index_l, long *data_img, long 
     index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
 
     if (line.content[index_l] == ',') {
-        printf("Unexpected comma after .data instruction");
+        print_error(line, "Unexpected comma after .data instruction");
     }
 
     /* Copyes the number*/
@@ -99,11 +99,11 @@ bool process_data_instruction(line_info line, int index_l, long *data_img, long 
 
         temp_string[index_n] = '\0'; /* End of string */
 
-        convert_defind(temp_string, symbol_table, 1);
+        convert_defind(temp_string, symbol_table, FALSE);
 
         /* Checks if it's a ligel digit*/
         if (!check_if_digit(temp_string)) {
-            printf("Expected integer for .data instruction");
+            print_error(line, "Expected integer for .data instruction (got '%s')", temp_string);
             return FALSE;
         }
 
@@ -123,11 +123,11 @@ bool process_data_instruction(line_info line, int index_l, long *data_img, long 
         index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
 
         if (line.content[index_l] == ',') {
-            printf("Multiple consecutive commas.");
+           print_error(line, "Multiple consecutive commas.");
             return FALSE;
         }
         else if (line.content[index_l] == EOF || line.content[index_l] == '\n' || !line.content[index_l]) {
-            printf("Missing data after comma");
+            print_error(line, "Missing data after comma");
             return FALSE;
         }
     }

@@ -42,7 +42,6 @@ void add_table_item(table *tab, char *name, long value, symbol_type type);
 */
 bool check_item_name(char *table_name, char *new_name);
 
-
 /**
  * Finds the item from the tabel by their types
  * @param tab A pointer to the table

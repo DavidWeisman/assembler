@@ -47,7 +47,7 @@ bool process_line_spass(line_info line, long *ic, machine_word **code_img, table
 
             /* If teh label is alrady defindes as entry, ignore*/
             if (token == NULL) {
-                printf("You have to specify a label name for .entry instruction.");
+                print_error(line, "You have to specify a label name for .entry instruction.");
                 return FALSE;
             }
             if (find_by_types(*symbol_table, token)->type != ENTRY_SYMBOL) {
@@ -61,10 +61,10 @@ bool process_line_spass(line_info line, long *ic, machine_word **code_img, table
                     /* If defined as external */
                     item = find_by_types(*symbol_table, token);
                     if (item->type == EXTERNAL_SYMBOL) {
-                        printf("The symbol can be either external or entry, but not both.");
+                        print_error(line, "The symbol %s can be either external or entry, but not both.", item->type);
                         return FALSE;
                     }
-                    printf("The symbol for .entry is undefined.\n");
+					print_error(line, "The symbol %s for .entry is undefined.", token);
                     return FALSE;
                 }
                 /* otherwise print more general error */
@@ -152,8 +152,8 @@ bool add_symbols_to_code(line_info line, long *ic, machine_word **code_img, tabl
  */
 bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operand, machine_word **code_img, table *symbol_table) {
     addressing_type addr = get_addressing_type(operand, *symbol_table);
-    machine_word *word_to_write_1;
-    machine_word *word_to_write_2;
+    machine_word *word_to_write; 
+    machine_word *extra_word_to_write; /* extra word for the number in Index Fixed Addresing */
 
     /* if the word on *IC has the immediately addressed value (done in first pass), go to next cell (increase ic) */
     if (addr == IMMEDIATE_ADDR || addr == REGISTER_ADDR) {
@@ -166,85 +166,88 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
     
 
         if (INDEX_FIXED_ADDR == addr) {
-            int index_o = 0;
-            int index_temp = 0;
-            char temp_string[MAX_LINE_LENGTH];
-            char temp_int[MAX_LINE_LENGTH];
+            int index_o = 0;  /* Index of the operand*/
+            int temp_index = 0; /* Index for the label and the number */
+            char lable[MAX_LINE_LENGTH]; /* The place for the name of the index fixed addresing lable */
+            char number[MAX_LINE_LENGTH]; /* The number between the bracets */
             
-            index_o = skip_spaces(operand, index_o);
+            index_o = skip_spaces(operand, index_o); /*Skips all the spaces or tabs*/
+
+            /* Copys the label name */
             while (operand[index_o] != '[') {
-                temp_string[index_temp] = operand[index_o];
+                lable[temp_index] = operand[index_o];
                 index_o++;
-                index_temp++;
+                temp_index++;
             }
-            
-            temp_string[index_temp] = '\0';
+            lable[temp_index] = '\0';
             index_o++;
-            index_temp = 0;
+            temp_index = 0;
+
+            /* Copys the number */
             while (operand[index_o] != ']') {
-                temp_int[index_temp] = operand[index_o];
+                number[temp_index] = operand[index_o];
                 index_o++;
-                index_temp++;
+                temp_index++;
             }
-            
-            temp_int[index_temp] = '\0';
-            convert_defind(temp_int, *symbol_table, 1);
-            item = find_by_types(*symbol_table, temp_string);
+            number[temp_index] = '\0';
+
+            /* Checks if it's a mdefine item */
+            convert_defind(number, *symbol_table, FALSE);
+
+            item = find_by_types(*symbol_table, lable);
             if (item == NULL) {
-                printf("The symbol not found %s, %d, %d\n", temp_string, line.line_number, addr);
+                print_error(line, "The symbol %s not found", operand);
                 return FALSE;
             }
 
-                /* The symbol found*/
             data_to_add = item->value;
             /* Add to externals reference table if it's an external. increase ic because it's the next data word */
             if (item->type == EXTERNAL_SYMBOL) {
                 add_table_item(symbol_table, operand, (*curr_ic) + 1, EXTERNAL_REFERENCE);
             }
 
-            /* The symbol found*/        
-            word_to_write_1 = (machine_word *)malloc(sizeof(machine_word));
-            if (word_to_write_1 == NULL){
+            /* Adds the word into the code image */
+            word_to_write = (machine_word *)malloc(sizeof(machine_word));
+            if (word_to_write == NULL){
                 printf("Memory allocation failed\n");  
                 return FALSE;
             }
-            word_to_write_1->length = 0;
-            word_to_write_1->word.data = build_data_word(DIRECT_ADDR, data_to_add, item->type == EXTERNAL_SYMBOL, FALSE);
-            code_img[(++(*curr_ic)) - IC_INIT_VALUE] = word_to_write_1;
+            word_to_write->length = 0;
+            word_to_write->word.data = build_data_word(DIRECT_ADDR, data_to_add, item->type == EXTERNAL_SYMBOL, FALSE);
+            code_img[(++(*curr_ic)) - IC_INIT_VALUE] = word_to_write;
 
-            /* The symbol found*/        
-            word_to_write_2 = (machine_word *)malloc(sizeof(machine_word));
-            if (word_to_write_2 == NULL){
+            /* Adds the extra word into the code image, of the number  */
+            extra_word_to_write = (machine_word *)malloc(sizeof(machine_word));
+            if (extra_word_to_write == NULL){
                 printf("Memory allocation failed\n");  
                 return FALSE;
             }
-            word_to_write_2->length = 0;
-            word_to_write_2->word.data = build_data_word(IMMEDIATE_ADDR, strtol(temp_int, NULL, 10), FALSE, FALSE);
-            code_img[(++(*curr_ic)) - IC_INIT_VALUE] = word_to_write_2;
+            extra_word_to_write->length = 0;
+            extra_word_to_write->word.data = build_data_word(IMMEDIATE_ADDR, strtol(number, NULL, 10), FALSE, FALSE);
+            code_img[(++(*curr_ic)) - IC_INIT_VALUE] = extra_word_to_write;
         }
         else {
             item = find_by_types(*symbol_table, operand);
             if (item == NULL) {
-                printf("The symbol not found %s, %d, %d\n", operand, line.line_number, addr);
+                print_error(line, "The symbol %s not found", operand);
                 return FALSE;
             }
 
-            /* The symbol found*/
             data_to_add = item->value;
             /* Add to externals reference table if it's an external. increase ic because it's the next data word */
             if (item->type == EXTERNAL_SYMBOL) {
                 add_table_item(symbol_table, operand, (*curr_ic) + 1, EXTERNAL_REFERENCE);
             }
 
-            /* The symbol found*/        
-            word_to_write_1 = (machine_word *)malloc(sizeof(machine_word));
-            if (word_to_write_1 == NULL){
+            /* Adds the word into the code image */   
+            word_to_write = (machine_word *)malloc(sizeof(machine_word));
+            if (word_to_write == NULL){
                 printf("Memory allocation failed\n");  
                 return FALSE;
             }
-            word_to_write_1->length = 0;
-            word_to_write_1->word.data = build_data_word(addr, data_to_add, item->type == EXTERNAL_SYMBOL, FALSE);
-            code_img[(++(*curr_ic)) - IC_INIT_VALUE] = word_to_write_1;
+            word_to_write->length = 0;
+            word_to_write->word.data = build_data_word(addr, data_to_add, item->type == EXTERNAL_SYMBOL, FALSE);
+            code_img[(++(*curr_ic)) - IC_INIT_VALUE] = word_to_write;
         }
     }
     return TRUE;

@@ -7,19 +7,11 @@
 #include "globals.h"
 #include "utils.h"
 
-
-
-/*
-Things to fix
-
-1- arrays
-2- .defind
-3- macro
-
-
+/**
+ * Processes a singel assembly input file, and returns the result
+ * @param file_name The file name
+ * @return True or false, if succeeded or not
 */
-
-/*Processes singel assembly file*/
 bool handel_singel_file(char *file_name);
 
 
@@ -47,11 +39,11 @@ int main(int argc, char *argv[]){
 
 bool handel_singel_file(char *file_name) {
     int temp_c; /*Temporary variable for skiping remainin characters*/
-    int index_l;
-    long ic = IC_INIT_VALUE;
-    long dc = 0;
-    long icf;
-    long dcf;
+    int index_l; /* The index of line, used to track the position within a line of the input file*/
+    long ic = IC_INIT_VALUE; /* Instruction counter*/
+    long dc = 0;    /* Data counter*/
+    long ic_first_pass;     /* Store the value of the Instruction Counter (IC) after the first pass */   
+    long dc_first_pass;     /* Store the value of the Data Counter (DC) after the first pass */
     bool is_success = TRUE;
     char *input_filename; 
     char temp_line[MAX_LINE_LENGTH + 2]; /*Temporary string variable representing an input line*/
@@ -83,7 +75,8 @@ bool handel_singel_file(char *file_name) {
     {
         /* In case of too long line */    
         if (strchr(temp_line, '\n') == NULL && !feof(input_file)){
-            printf("Line too long to process.");
+            print_error(current_line, "Line too long to process. Maximum line length should be %d.", MAX_LINE_LENGTH);
+            is_success = FALSE;
 
             /* Skip remaining characters in the line */
             temp_c = fgetc(input_file);
@@ -94,7 +87,8 @@ bool handel_singel_file(char *file_name) {
         else{
             if (!process_line_fpass(current_line, &ic, &dc, code_img, data_img, &symbol_table)){
                 if (is_success) {
-                    icf = -1;
+                    /* free_code_image(code_img, ic_before); */
+                    ic_first_pass = -1;
                     is_success = FALSE;
                 }
             }  
@@ -102,16 +96,18 @@ bool handel_singel_file(char *file_name) {
         current_line.line_number++;
     }
     
-    /* Saves ICF and DCF*/
-    icf = ic;
-    dcf = dc;
+    /* Saves IC and DC of the first pass*/
+    ic_first_pass = ic;
+    dc_first_pass = dc;
 
+
+    /* If the first pass success, start the seconcd pass */
     if (is_success) {
 
         ic = IC_INIT_VALUE;
 
         /* Adds teh IC to each DC for each of teh data symbols in the table*/
-        add_value_to_type(symbol_table, icf, DATA_SYMBOL);
+        add_value_to_type(symbol_table, ic_first_pass, DATA_SYMBOL);
         
         /* Starts teh second pass*/
         rewind(input_file); /* Starts from the beginning of the file */
@@ -129,7 +125,7 @@ bool handel_singel_file(char *file_name) {
         /* Write files if second pass succeeded */
 		if (is_success) {
 			/* Everything was done. Write to *filename.ob/.ext/.ent */
-			is_success = write_output_files(code_img, data_img, icf, dcf, file_name, symbol_table);
+			is_success = write_output_files(code_img, data_img, ic_first_pass, dc_first_pass, file_name, symbol_table);
 		}
     }
     /* Now let's free some pointer: */
@@ -138,7 +134,7 @@ bool handel_singel_file(char *file_name) {
 	/* Free symbol table */
 	free_table(symbol_table);
 	/* Free code & data buffer contents */
-	free_code_image(code_img, icf);
+	free_code_image(code_img, ic_first_pass);
 
 	/* return whether every assembling succeeded */
 	return is_success;

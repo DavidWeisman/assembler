@@ -74,5 +74,25 @@ bool check_if_digit(char *string);
  */
 void free_code_image(machine_word **code_image, long fic);
 
+/**
+ * Chckes if the lable is a mdefine lable
+ * If it does checks if the label was alrady defined
+ * If it does returns erro
+ * If it doesn't adds the item to the symbol table
+ * @param line The line we work on
+ * @param symbol_table The symbol table
+ * @param sybol The place where goes the result
+ * @return The of false if it's a valid or not lable
+*/
 bool check_mdefine(line_info line, table *symbol_table, char *symbol);
+
+/**
+ * Prints a detailed error message, including file name and line number by the specified message,
+ * formatted as specified in App. B of "The C Programming language" for printf.
+ * @param line The line where is the error
+ * @param message The error message
+ * @param ... The arguments to format into the message
+ * @return printf result of the message
+ */
+bool print_error(line_info line, char *massage, ...);
 #endif
