@@ -1,6 +1,6 @@
 #ifndef _TABLE_H
 #define _TABLE_H
-#include "globals.h"
+#include "global_variables.h"
 /** The symbols types */
 typedef enum symbol_type {
 	CODE_SYMBOL,

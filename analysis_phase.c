@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "second_pass.h"
-#include "code.h"
-#include "utils.h"
-#include "string.h"
+#include <string.h>
+#include "analysis_phase.h"
+#include "code_functions.h"
+#include "utility_functions.h"
 
 bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operand, machine_word **code_img, table *symbol_table);
 

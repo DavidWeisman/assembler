@@ -1,7 +1,7 @@
 #ifndef _CODE_H
 #define _CODE_H
-#include "table.h"
-#include "globals.h"
+#include "data_tables.h"
+#include "global_variables.h"
 
 /**
  * Returns the register value by the input name

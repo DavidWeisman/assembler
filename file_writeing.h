@@ -1,8 +1,8 @@
 /* Output files related functions */
 #ifndef _WRITEFILES_H
 #define _WRITEFILES_H
-#include "globals.h"
-#include "table.h"
+#include "global_variables.h"
+#include "data_tables.h"
 
 /**
  * Writes the output files of a single assembled file

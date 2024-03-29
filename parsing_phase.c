@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "globals.h"
-#include "code.h"
-#include "utils.h"
-#include "instructions.h"
-#include "first_pass.h"
+#include "global_variables.h"
+#include "code_functions.h"
+#include "utility_functions.h"
+#include "instructions_set.h"
+#include "parsing_phase.h"
 
 
 /**

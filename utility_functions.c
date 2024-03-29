@@ -3,9 +3,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdarg.h>
-#include "utils.h"
-#include "code.h"
-#include "table.h"
+#include "utility_functions.h"
+#include "code_functions.h"
+#include "data_tables.h"
 
 #define ERR_OUTPUT_FILE stderr
 

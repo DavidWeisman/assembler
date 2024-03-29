@@ -3,8 +3,8 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include "code.h"
-#include "utils.h"
+#include "code_functions.h"
+#include "utility_functions.h"
 
 /**
  * Checks the operands addressing types, prints error if needed

@@ -1,6 +1,6 @@
 #ifndef _INSTRUCTIONS_H
 #define _INSTRUCTIONS_H
-#include "globals.h"
+#include "global_variables.h"
 
 /**
  * Returns the instruction from the index of the input line

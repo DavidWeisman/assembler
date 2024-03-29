@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "writefiles.h"
-#include "first_pass.h"
-#include "second_pass.h"
-#include "globals.h"
-#include "utils.h"
+#include "file_writeing.h"
+#include "parsing_phase.h"
+#include "analysis_phase.h"
+#include "global_variables.h"
+#include "utility_functions.h"
 
 /**
  * Processes a singel assembly input file, and returns the result

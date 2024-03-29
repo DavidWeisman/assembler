@@ -1,8 +1,8 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#include "globals.h"
-#include "table.h"
+#include "global_variables.h"
+#include "data_tables.h"
 /**
  * Adds extension to the name of the file
  * Connects to strings

@@ -1,8 +1,8 @@
 /* Second pass line processing related functions */
 #ifndef _SECOND_PASS_H
 #define _SECOND_PASS_H
-#include "globals.h"
-#include "table.h"
+#include "global_variables.h"
+#include "data_tables.h"
 
 /**
  * processes a single line in the second pass

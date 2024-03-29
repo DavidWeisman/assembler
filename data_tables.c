@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include "table.h"
-#include "utils.h"
+#include "data_tables.h"
+#include "utility_functions.h"
 
 /* Adds a new item the to table*/
 void add_table_item(table *tab, char *name, long value, symbol_type type){

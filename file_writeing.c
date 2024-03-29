@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "utils.h"
-#include "table.h"
+#include "utility_functions.h"
+#include "data_tables.h"
 
 #define KEEP_ONLY_24_LSB(value) ((value) & 0xFFFFFF)
 /**

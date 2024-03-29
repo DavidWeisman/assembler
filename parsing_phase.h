@@ -1,7 +1,7 @@
 #ifndef _FIRST_PASS_H
 #define _FIRST_PASS_H
-#include "globals.h"
-#include "table.h"
+#include "global_variables.h"
+#include "data_tables.h"
 
 /** Processes a single line in the first pass
  * @param line The line we work on

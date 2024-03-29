@@ -1,9 +1,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils.h"
-#include "table.h"
-#include "code.h"
+#include "utility_functions.h"
+#include "data_tables.h"
+#include "code_functions.h"
 
 /* Returns the instruction from the given index, if not found returns NONE_INST*/
 instruction find_instruction_from_index(line_info line, int *index_l) {
