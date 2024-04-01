@@ -15,19 +15,19 @@ struct macro_info {
 };
 
 
-void extract_macro(FILE *input_file, struct macro_info *macro) {
+static void extract_macro(FILE *input_file, struct macro_info *macro) {
     char line[MAX_LINE_LENGTH];
 
     /* Read lines until "endmcr" directive is found */
     while (fgets(line, MAX_LINE_LENGTH, input_file) != NULL) {
         if (strstr(line, "endmcr") != NULL) {
-            break;
+            return;
         }
         strcat(macro->code, line);
     }
 }
 
-bool handel_macro(char *file_name, bool *result) {
+char *handel_macro(char *file_name) {
     FILE *input_file;
     FILE *output_file;
     int num_macros = 0;
@@ -47,12 +47,11 @@ bool handel_macro(char *file_name, bool *result) {
     input_file = fopen(input_file_name, "r");
     if (input_file == NULL){
         printf("file can't be opend \n");
-        free(input_file_name);
+        free(input_file);
         return FALSE;
     } 
-
     /*Adds  .as extension */
-    outout_file_name = add_extension(file_name, ".as");
+    outout_file_name = add_extension(file_name, ".txt");
 
     output_file = fopen(outout_file_name, "w");
     if (output_file == NULL){
@@ -60,28 +59,30 @@ bool handel_macro(char *file_name, bool *result) {
         free(outout_file_name);
         return FALSE;
     } 
-
+    
     while (fgets(line, MAX_LINE_LENGTH, input_file) != NULL) {
-        if (strstr(line, "mcr") != NULL) {
-            extract_macro(input_file, &macros[num_macros]);
-            num_macros++;
-
+        if (strstr(line, "mcr ") != NULL) {
             while (line[index_l] && line[index_l] != '\n' && line[index_l] != ' ') {
                 macros[num_macros].name[index_m] = line[index_l];
                 index_l++;
                 index_m++;
             }
             macros[num_macros].name[index_m] = '\0';
+            extract_macro(input_file, &macros[num_macros]);
+            num_macros++;
         }
     }
-
     fseek(input_file, 0, SEEK_SET);
-    
     while (fgets(line, MAX_LINE_LENGTH, input_file) != NULL) {
         macro_found = FALSE;
-
+        if (strstr(line, "mcr ") != NULL && strstr(line, macros[0].name) != NULL){
+            while (strstr(line, "endmcr") == NULL) {
+                continue;
+            }
+        }
         for (temp_index = 0; temp_index < num_macros; temp_index++) {
-            if (strstr(line, macros[temp_index].name) != NULL) {
+            if (strstr(line, macros[0].name) != NULL) {
+                
                 fprintf(output_file, "%s", macros[temp_index].code);
                 macro_found = TRUE;
             }
@@ -90,7 +91,8 @@ bool handel_macro(char *file_name, bool *result) {
             fprintf(output_file, "%s", line);
         }
     }
-    return TRUE;
+    
+    return outout_file_name;
 }
 
     

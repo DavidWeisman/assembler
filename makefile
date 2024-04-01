@@ -39,7 +39,7 @@ utility_functions.o: utility_functions.c instructions_set.h $(GLOBAL_DEPS)
 file_writeing.o: file_writeing.c file_writeing.h $(GLOBAL_DEPS)
 	$(CC) -c file_writeing.c $(CFLAGS) -o $@
 	
-preprocessor.o: preprocessor.c $(GLOBAL_DEPS)
+preprocessor.o: preprocessor.c preprocessor.h $(GLOBAL_DEPS)
 	$(CC) -c preprocessor.c $(CFLAGS) -o $@
 
 # Clean Target (remove leftovers)

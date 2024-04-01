@@ -6,7 +6,7 @@
 #include "analysis_phase.h"
 #include "global_variables.h"
 #include "utility_functions.h"
-#include "preprocessor.c"
+#include "preprocessor.h"
 
 /**
  * Processes a singel assembly input file, and returns the result
@@ -17,6 +17,9 @@ bool handel_singel_file(char *file_name);
 
 
 int main(int argc, char *argv[]){
+    char output[MAX_LINE_LENGTH];
+    char *output_filename, c;
+    FILE *outputfile;
     int number_of_file; /*Number of input assembly files*/
 
     /* In case of erroe break line */
@@ -25,9 +28,9 @@ int main(int argc, char *argv[]){
     if (argc == 1){
         printf("You didn't enter any files\n");
     }
+
+    output_filename = handel_macro(argv[1]);
     
-
-
 
     /*Processes each file
         for (number_of_file = 1; number_of_file < argc; number_of_file++){
