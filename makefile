@@ -2,7 +2,7 @@
 CC = gcc # GCC Compiler
 CFLAGS = -ansi -Wall -pedantic # Flags
 GLOBAL_DEPS = global_variables.h # Dependencies for everything
-EXE_DEPS = main_program.o code_functions.o parsing_phase.o analysis_phase.o instructions_set.o data_tables.o utility_functions.o file_writeing.o # Deps for exe
+EXE_DEPS = main_program.o code_functions.o parsing_phase.o analysis_phase.o instructions_set.o data_tables.o utility_functions.o file_writeing.o preprocessor.o # Deps for exe
 
 ## Executable
 main_program: $(EXE_DEPS) $(GLOBAL_DEPS)
@@ -39,6 +39,9 @@ utility_functions.o: utility_functions.c instructions_set.h $(GLOBAL_DEPS)
 file_writeing.o: file_writeing.c file_writeing.h $(GLOBAL_DEPS)
 	$(CC) -c file_writeing.c $(CFLAGS) -o $@
 	
+preprocessor.o: preprocessor.c $(GLOBAL_DEPS)
+	$(CC) -c preprocessor.c $(CFLAGS) -o $@
+
 # Clean Target (remove leftovers)
 clean:
 	rm -rf *.o

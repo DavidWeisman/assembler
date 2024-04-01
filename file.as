@@ -1,32 +1,15 @@
-; print_characters.as (c) Nadav Kahlon
-
-
-MAIN: 			red r5
-				sub char0, r5
-				
-				red startChar
-				mov startChar, endChar
-				add r5, endChar
-				.extern startChar
-endChar:		.data 1, -78
-				jsr PrintChars
-				
-				clr startChar
-				clr endChar
-				hlt
-.entry MAIN
-	
-
-
-PrintChars:		mov startChar, r0
-CharLoop:		prn r0
-				inc r0
-				cmp r0, endChar
-				bne EndCharLoop
-				jmp CharLoop
-EndCharLoop:	rts
-.entry PrintChars
-
-
-
-char0: .string "0"
+.define sz = 2
+MAIN: mov r3,LIST[sz]
+LOOP: jmp L1
+prn #-5
+mov STR[5], STR[2]
+sub r1,r4
+cmp r3, #sz
+bne END
+L1: inc K
+bne LOOP
+END: hlt
+.define len = 4
+STR: .string "abcdef"
+LIST: .data 6, -9, len
+K: .data 22

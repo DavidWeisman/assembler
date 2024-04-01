@@ -6,6 +6,7 @@
 #include "analysis_phase.h"
 #include "global_variables.h"
 #include "utility_functions.h"
+#include "preprocessor.c"
 
 /**
  * Processes a singel assembly input file, and returns the result
@@ -24,14 +25,20 @@ int main(int argc, char *argv[]){
     if (argc == 1){
         printf("You didn't enter any files\n");
     }
-   
-    /*Processes each file*/
-    for (number_of_file = 1; number_of_file < argc; number_of_file++){
-        if (!succeeded) { /* if last process failed and there's another file, break line: */
+    
+
+
+
+    /*Processes each file
+        for (number_of_file = 1; number_of_file < argc; number_of_file++){
+        if (!succeeded) {  if last process failed and there's another file, break line: 
             puts("");
         }
         succeeded = handel_singel_file(argv[number_of_file]);
     }
+    
+    */
+    
     return 0;
 }
 
