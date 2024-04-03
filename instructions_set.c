@@ -5,131 +5,140 @@
 #include "data_tables.h"
 #include "code_functions.h"
 
-/* Returns the instruction from the given index, if not found returns NONE_INST*/
-instruction find_instruction_from_index(line_info line, int *index_l) {
-    char currentInstruction[MAX_LINE_LENGTH];          
-    int index_i = 0;    /* Indes of the instruction*/
-    instruction result;
+/* Finds the instruction from the index within a line */
+instruction find_instruction_from_index(line_info line, int *index_line) {
+    char current_instruction[MAX_LINE_LENGTH]; /* Buffer to store the current instruction */
+    int index_instruction = 0; /* Index for storing characters in the current instruction */
+    instruction result; /* Variable to store the result instruction */
 
-    *index_l = skip_spaces(line.content, *index_l); /*Skips all the spaces or tabs*/
-    
-    /*If there is no instruction */
-    if(line.content[*index_l] != '.'){
-        return NONE_INST;
+    *index_line = skip_spaces(line.content, *index_line); /* Skip leading spaces */
+
+    /* Check if the content at the specified index is not a '.' */
+    if (line.content[*index_line] != '.') {
+        return NONE_INST; /* If not, return NONE_INST */
     }
 
-    /* Copying the instruction */
-    while (line.content[*index_l] && line.content[*index_l] != '\t' && line.content[*index_l] != ' ')
-    {
-        currentInstruction[index_i] = line.content[*index_l];
-        index_i++;
-        (*index_l)++;
+    /* Read the instruction until encountering a tab, space, or end of line */
+    while (line.content[*index_line] && line.content[*index_line] != '\t' && line.content[*index_line] != ' ') {
+        current_instruction[index_instruction] = line.content[*index_line]; /* Store character in current_instruction buffer */
+        index_instruction++;
+        (*index_line)++;
     }
-    currentInstruction[index_i] = '\0'; /* End of string*/
-    
+    current_instruction[index_instruction] = '\0'; /* Null-terminate the current instruction string */
 
-    result = find_instruction_by_name(currentInstruction + 1);
-    if (result != NONE_INST){
-        return result;
+    /* Find the instruction by name */
+    result = find_instruction_by_name(current_instruction + 1); /* Skip the '.' */
+    if (result != NONE_INST) {
+        return result; /* If found, return the instruction */
     }
 
-    /* If the name of the instruction isn't currect*/
-    print_error(line, "Invalid instruction name: %s", currentInstruction);
+    /* If the instruction is not found, print an error message and return ERROR_INST */
+    print_error(line, "Invalid instruction name: %s", current_instruction);
     return ERROR_INST;
 }
 
-/* Process string Instruction */
-bool process_string_instruction(line_info line, int index_l, long *data_img, long *dc) {
-    char temp_string[MAX_LINE_LENGTH];              
-    char *last_quote_location = strrchr(line.content, '"'); /* The last quote location in the input line*/
-    index_l = skip_spaces(line.content, index_l);  /*Skips all the spaces or tabs*/
-    if (line.content[index_l] != '"') {
-        /* If the instruction string isn't starts with quote*/
+/* Processes the string instruction within a line */
+bool process_string_instruction(line_info line, int index_line, long *data_img, long *dc) {
+    char temp_string[MAX_LINE_LENGTH]; /* Temporary buffer to store the string content */
+    char *last_quote_location = strrchr(line.content, '"'); /* Pointer to the last quote character in the line content */
+    index_line = skip_spaces(line.content, index_line); /* Skip leading spaces */
+
+    /* Check for the presence of the opening quote */
+    if (line.content[index_line] != '"') {
         print_error(line, "Missing opening quote of string");
         return FALSE;
     }
-    else if (&line.content[index_l] == last_quote_location) { /* If the last quote is in the same location as the first one*/
+    /* Check for the presence of the closing quote */
+    else if (&line.content[index_line] == last_quote_location) {
         print_error(line, "Missing closing quote of string");
         return FALSE;
     }
     else {
-        int index_s = 0; /* Indes of the instruction string*/
-        /* Copying the string with the quotes */
-        while (line.content[index_l] && line.content[index_l] != '\n' && line.content[index_l] != EOF){
-            temp_string[index_s] = line.content[index_l];
-            index_l++;
-            index_s++;
+        int index_string = 0; /* Index for storing characters in the temporary string buffer */
+
+        /* Extract the string content between the quotes */
+        while (line.content[index_line] && line.content[index_line] != '\n' && line.content[index_line] != EOF) {
+            temp_string[index_string] = line.content[index_line];
+            index_line++;
+            index_string++;
         }
 
-        /* Puts the end of line sign insted of a quote */
+        /* Null-terminate the extracted string */
         temp_string[last_quote_location - line.content] = '\0';
 
-        /*puts the inter of the string in the data image*/
-        for (index_s = 1; temp_string[index_s] && temp_string[index_s] != '"'; index_s++){
-            data_img[*dc] = temp_string[index_s];
-            (*dc)++;
+        /* Convert the string content into ASCII values and store them in the data_img array */
+        for (index_string = 1; temp_string[index_string] && temp_string[index_string] != '"'; index_string++) {
+            data_img[*dc] = temp_string[index_string]; /* Store ASCII value */
+            (*dc)++; /* Increment data counter */
         }
-        data_img[*dc] = 0;
-        (*dc)++;
+        data_img[*dc] = 0; /* Null-terminate the string in the data_img array */
+        (*dc)++; /* Increment data counter */
     }
-    return TRUE; /* End of the process*/
+    return TRUE; /* Return TRUE indicating successful processing */
 }
 
-/* Process data Instruction */
-bool process_data_instruction(line_info line, int index_l, long *data_img, long *dc, table symbol_table){
-    char temp_string[MAX_LINE_LENGTH];
-    char *temp_pointer;
-    long number_value;
-    int index_n;
-    
-    index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
+/* Processes the .data instruction within a line */
+bool process_data_instruction(line_info line, int index_line, long *data_img, long *dc, table symbol_table) {
+    char temp_string[MAX_LINE_LENGTH]; /* Temporary buffer to store the extracted string or number */
+    char *temp_pointer; /* Temporary pointer for string to number conversion */
+    long number_value; /* Parsed long integer value */
+    int index_number; /* Index for storing characters in the temporary string buffer */
 
-    if (line.content[index_l] == ',') {
+    index_line = skip_spaces(line.content, index_line); /* Skip leading spaces */
+
+    if (line.content[index_line] == ',') {
         print_error(line, "Unexpected comma after .data instruction");
     }
 
-    /* Copyes the number*/
-    while (line.content[index_l] != '\n' && line.content[index_l] != EOF) {
-        index_n = 0;
-        while (line.content[index_l] && line.content[index_l] != EOF && line.content[index_l] != '\t' && line.content[index_l] != ' ' && line.content[index_l] != ',' && line.content[index_l] != '\n') {
-            temp_string[index_n] = line.content[index_l];
-            index_l++;
-            index_n++;
+    while (line.content[index_line] != '\n' && line.content[index_line] != EOF) {
+        index_number = 0;
+
+        /* Extract characters until encountering whitespace, comma, or newline */
+        while (line.content[index_line] && line.content[index_line] != EOF && line.content[index_line] != '\t' &&
+               line.content[index_line] != ' ' && line.content[index_line] != ',' && line.content[index_line] != '\n') {
+            temp_string[index_number] = line.content[index_line];
+            index_line++;
+            index_number++;
         }
 
-        temp_string[index_n] = '\0'; /* End of string */
+        temp_string[index_number] = '\0'; /* Null-terminate the extracted string */
 
+        /* Convert any defined symbols to their corresponding numeric values */
         convert_defind(temp_string, symbol_table, FALSE);
 
-        /* Checks if it's a ligel digit*/
+        /* Check if the extracted string represents a valid integer */
         if (!check_if_digit(temp_string)) {
             print_error(line, "Expected integer for .data instruction (got '%s')", temp_string);
             return FALSE;
         }
 
-        /* Puts the number in to the data image*/
+        /* Convert the string to a long integer */
         number_value = strtol(temp_string, &temp_pointer, 10);
-        data_img[*dc] = number_value;
-        (*dc)++;
+        data_img[*dc] = number_value; /* Store the parsed integer value */
+        (*dc)++; /* Increment the data counter */
 
-        index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
-        if (line.content[index_l] == ',') {
-            index_l++;
+        index_line = skip_spaces(line.content, index_line); /* Skip leading spaces */
+
+        /* Check for additional operands */
+        if (line.content[index_line] == ',') {
+            index_line++;
         }
-        else if (!line.content[index_l] || line.content[index_l] == '\n' || line.content[index_l] == EOF){
-            break; /* Nothing to process anymore*/
+        else if (!line.content[index_line] || line.content[index_line] == '\n' || line.content[index_line] == EOF) {
+            break; /* End of line or file */
         }
 
-        index_l = skip_spaces(line.content, index_l); /*Skips all the spaces or tabs*/
+        index_line = skip_spaces(line.content, index_line); /* Skip leading spaces */
 
-        if (line.content[index_l] == ',') {
-           print_error(line, "Multiple consecutive commas.");
+        /* Validate the presence of expected characters after comma */
+        if (line.content[index_line] == ',') {
+            print_error(line, "Multiple consecutive commas.");
             return FALSE;
         }
-        else if (line.content[index_l] == EOF || line.content[index_l] == '\n' || !line.content[index_l]) {
+        else if (line.content[index_line] == EOF || line.content[index_line] == '\n' || !line.content[index_line]) {
             print_error(line, "Missing data after comma");
             return FALSE;
         }
     }
-    return TRUE;
+
+    return TRUE; /* Return TRUE indicating successful processing */
 }

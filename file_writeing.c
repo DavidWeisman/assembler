@@ -4,14 +4,23 @@
 #include "utility_functions.h"
 #include "data_tables.h"
 
+/* Macro to keep only the 24 least significant bits of a value.
+ *
+ * This macro masks the input value with 0xFFFFFF, keeping only the 24 least significant bits.
+ *
+ * @param value The value whose 24 least significant bits are to be kept.
+ * @return The result after masking with 0xFFFFFF to keep only the 24 least significant bits.
+ */
 #define KEEP_ONLY_24_LSB(value) ((value) & 0xFFFFFF)
-/**
- * "Cuts" the msb of the value, keeping only it's lowest 21 bits
- * 0b00000000000111111111111111111111 = 0x1FFFFF
+
+/* Macro to keep only the 21 least significant bits of a value.
+ *
+ * This macro masks the input value with 0x1FFFFF, keeping only the 21 least significant bits.
+ *
+ * @param value The value whose 21 least significant bits are to be kept.
+ * @return The result after masking with 0x1FFFFF to keep only the 21 least significant bits.
  */
 #define KEEP_ONLY_21_LSB(value) ((value) & 0x1FFFFF)
-
-
 
 void print_binary(long value) {
     /* Mask for checking each bit */
@@ -23,115 +32,128 @@ void print_binary(long value) {
 	printf("\n");
 }
 
-
-
-
 /**
- * Writes the code and data image into an .ob file, with lengths on top
- * @param code_img The code image
- * @param data_img The data image
- * @param icf The final instruction counter
- * @param dcf The final data counter
- * @param filename The filename, without the extension
- * @return Whether succeeded
+ * Writes machine code and data to a .ob output file.
+ *
+ * This function writes machine code and data to a .ob output file. It opens the file for writing,
+ * writes the headers containing the final instruction and data counters, then writes the machine
+ * code and data lines to the file. It also prints the memory address and binary representation of
+ * each code and data entry to the console. Finally, it closes the file and returns whether the
+ * operation was successful.
+ *
+ * @param code_img The machine code image.
+ * @param data_img The data image.
+ * @param icf The final instruction counter value.
+ * @param dcf The final data counter value.
+ * @param filename The base filename for the output file.
+ * @return Returns true if the file was written successfully, otherwise returns false.
  */
 static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf, char *filename);
 
 /**
- * Writes a symbol table to a file. Each symbol and it's address in line, separated by a single space.
- * @param tab The symbol table to write
- * @param filename The filename without the extension
- * @param file_extension The extension of the file, including dot before
- * @return Whether succeeded
+ *  Writes a table to a file with the specified filename and extension.
+ *
+ * This function writes the contents of a table to a file with the specified filename and extension.
+ * It opens the file for writing, writes the table entries to the file, then closes the file.
+ * If the table is NULL or empty, it returns true without performing any operations.
+ * If the file cannot be opened, it prints an error message and returns false.
+ *
+ * @param tab The table to be written to the file.
+ * @param filename The base filename for the output file.
+ * @param file_extension The extension for the output file.
+ * @return Returns true if the table was successfully written to the file, otherwise returns false.
  */
 static bool write_table_to_file(table tab, char *filename, char *file_extension);
 
+
+/* Writes output files including machine code, external references, and entry symbols. */
 int write_output_files(machine_word **code_img, long *data_img, long icf, long dcf, char *filename, table symbol_table) {
-    bool result;
-    table externals = filter_table_by_type(symbol_table, EXTERNAL_REFERENCE);
-	table entries = filter_table_by_type(symbol_table, ENTRY_SYMBOL);
+    bool result; /* Result of file writing operations */
+    table externals = filter_table_by_type(symbol_table, EXTERNAL_REFERENCE); /* Extract external references */
+    table entries = filter_table_by_type(symbol_table, ENTRY_SYMBOL); /* Extract entry symbols */
 
-    /* Write .ob file */
-	result = write_ob(code_img, data_img, icf, dcf, filename) &&
-	         /* Write *.ent and *.ext files: call with symbols from external references type or entry type only */
-	         write_table_to_file(externals, filename, ".ext") &&
-	         write_table_to_file(entries, filename, ".ent");
-	/* Release filtered tables */
-	free_table(externals);
-	free_table(entries);
-	return result;
+    /* Write machine code, external references, and entry symbols to separate files */
+    result = write_ob(code_img, data_img, icf, dcf, filename) &&
+             write_table_to_file(externals, filename, ".ext") &&
+             write_table_to_file(entries, filename, ".ent");
+
+    /* Free memory allocated for the filtered tables */
+    free_table(externals);
+    free_table(entries);
+
+    return result; /* Return result of file writing operations */
 }
 
+/* Writes machine code and data to a .ob output file */
 static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf, char *filename) {
-	int i;
-	long val;
-	FILE *file_desc;
+	int index; /* Loop iterator */
+    long value; /* Value to be written to the file */
+    FILE *file_descriptor; /* File descriptor for the output file */
+    char *output_file; /* Filename with .ob extension */
 
-    /* add extension of file to open */
-    char *output_filename = add_extension(filename, ".ob");
-    /* Try to open the file for writing */
-	file_desc = fopen(output_filename, "w");
-    file_desc = fopen(output_filename, "w");
-	free(output_filename);
-	if (file_desc == NULL) {
-		printf("Can't create or rewrite to file %s.", output_filename);
-		return FALSE;
-	}
+    output_file = add_extension(filename, ".ob"); /* Get output file name */
+    file_descriptor = fopen(output_file, "w"); /* Open the output file for writing */
+    free(output_file); /* Free memory allocated for the output filename */
+    
+    /* Check if file is successfully opened */
+    if (file_descriptor == NULL) {
+        printf("Can't create or rewrite to file %s.", output_file);
+        return FALSE;
+    }
 
-    /* print data/code word count on top */
-	fprintf(file_desc, "%ld %ld", icf - IC_INIT_VALUE, dcf);
+    /* Write headers containing the final instruction and data counters */
+    fprintf(file_descriptor, "%ld %ld", icf - IC_INIT_VALUE, dcf);
 
-    /* starting from index 0, not IC_INIT_VALUE as icf, so we have to subtract it. */
-	for (i = 0; i < icf - IC_INIT_VALUE; i++) {
-        /*printf("%d. opcode: %d, src: %d, dest: %d, ARE: %d\n", i, code_img[i]->word.code->opcode, code_img[i]->word.code->src_addressing, code_img[i]->word.code->dest_addressing, code_img[i]->word.code->ARE);*/
-		if (code_img[i]->length > 0) {
-			val = (code_img[i]->word.code->opcode << 6) | (code_img[i]->word.code->src_addressing << 4) |
-			      (code_img[i]->word.code->dest_addressing << 2) | (code_img[i]->word.code->ARE);
-		} else {
-			/* We need to cut the value, keeping only it's 21 lsb, and include the ARE in the whole party as well: */
-			val = (KEEP_ONLY_21_LSB(code_img[i]->word.data->data) << 2) | (code_img[i]->word.data->ARE);
-		}
-		/* Write the value to the file - first */
-		printf("%.7d\t", i + 100);
-		print_binary(val);
-		fprintf(file_desc, "\n%.7d %.6lx", i + 100, val);
-	}
-    /* Write data image. dcf starts at 0 so it's fine */
-	for (i = 0; i < dcf; i++) {
-		/* print only lower 24 bytes */
-		val = KEEP_ONLY_24_LSB(data_img[i]);
-		/* print at least 6 digits of hex, and 7 digits of dc */
-		printf("%.7d\t", icf + i);
-		print_binary(val);
-		fprintf(file_desc, "\n%.7ld %.6lx", icf + i, val);
-	}
+    /* Write machine code lines to the file */
+    for (index = 0; index < icf - IC_INIT_VALUE; index++) {
+        if (code_img[index]->length > 0) {
+            value = (code_img[index]->word.code->opcode << 6) | (code_img[index]->word.code->src_addressing << 4) |
+                  (code_img[index]->word.code->dest_addressing << 2) | (code_img[index]->word.code->ARE);
+        } else {
+            value = (KEEP_ONLY_21_LSB(code_img[index]->word.data->data) << 2) | (code_img[index]->word.data->ARE);
+        }
+        printf("%.7d\t", index + 100); /* Print memory address to console */
+        print_binary(value); /* Print binary representation to console */
+        fprintf(file_descriptor, "\n%.7d %.6lx", index + 100, value); /* Write line to file */
+    }
 
-	/* Close the file */
-	fclose(file_desc);
-	return TRUE;
+    /* Write data lines to the file */
+    for (index = 0; index < dcf; index++) {
+        value = KEEP_ONLY_24_LSB(data_img[index]);
+        printf("%.7d\t", icf + index); /* Print memory address to console */
+        print_binary(value); /* Print binary representation to console */
+        fprintf(file_descriptor, "\n%.7ld %.6lx", icf + index, value); /* Write line to file */
+    }
+
+    fclose(file_descriptor); /* Close the output file */
+    return TRUE; /* Return true indicating successful operation */
 }
 
+/* Writes a table to a file with the specified filename and extension */
 static bool write_table_to_file(table tab, char *filename, char *file_extension) {
-	FILE *file_desc;
-	/* concatenate filename & extension, and open the file for writing: */
-	char *full_filename = add_extension(filename, file_extension);
-	file_desc = fopen(full_filename, "w");
-	free(full_filename);
-	/* if failed, print error and exit */
-	if (file_desc == NULL) {
-		printf("Can't create or rewrite to file %s.", full_filename);
-		return FALSE;
-	}
-	/* if table is null, nothing to write */
-	if (tab == NULL) return TRUE;
+	FILE *file_descriptor;
+    char *full_filename = add_extension(filename, file_extension); /* Create full filename with extension */
 
-	/* Write first line without \n to avoid extraneous line breaks */
-	fprintf(file_desc, "%s %.7ld", tab->name, tab->value);
-	while ((tab = tab->next) != NULL) {
-		fprintf(file_desc, "\n%s %.7ld", tab->name, tab->value);
-	}
-	fclose(file_desc);
-	return TRUE;
+    file_descriptor = fopen(full_filename, "w"); /* Open the output file for writing */
+    free(full_filename); /* Free memory allocated for the full filename */
+
+    /* Check if file is successfully opened */
+    if (file_descriptor == NULL) {
+        printf("Can't create or rewrite to file %s.", full_filename);
+        return FALSE;
+    }
+
+    /* If the table is NULL or empty, return true without performing any operations */
+    if (tab == NULL) return TRUE;
+
+    /* Write table entries to the file */
+    fprintf(file_descriptor, "%s %.7ld", tab->name, tab->value);
+    while ((tab = tab->next) != NULL) {
+        fprintf(file_descriptor, "\n%s %.7ld", tab->name, tab->value);
+    }
+
+    fclose(file_descriptor); /* Close the output file */
+    return TRUE; /* Return true indicating successful operation */
 }
 
 
