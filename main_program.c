@@ -13,141 +13,145 @@
  * @param file_name The file name
  * @return True or false, if succeeded or not
 */
-bool handel_singel_file(char *file_name);
+bool handle_single_file(char *file_name);
 
-
+/**
+ * @brief The main function for the assembler program.
+ * 
+ * This function serves as the entry point for the assembler program. It processes command-line arguments,
+ * processes macros in the first input file, then iterates over the remaining input files, handling each one individually.
+ * 
+ * @param argc The number of command-line arguments.
+ * @param argv An array of strings containing the command-line arguments.
+ * @return An integer indicating the exit status of the program.
+ */
 int main(int argc, char *argv[]){
-    char output[MAX_LINE_LENGTH];
-    char *output_filename, c;
-    FILE *outputfile;
-    int number_of_file; /*Number of input assembly files*/
+    int file_index;         /* Index of the input file in the argv array */
+    bool succeeded = TRUE;  /* Flag indicating the success of file processing */     
 
-    /* In case of erroe break line */
-    bool succeeded = TRUE;
-
+    /* Check if no input files are provided */
     if (argc == 1){
         printf("You didn't enter any files\n");
     }
 
-    output_filename = handel_macro(argv[1]);
-    
-
-    /*Processes each file
-        for (number_of_file = 1; number_of_file < argc; number_of_file++){
-        if (!succeeded) {  if last process failed and there's another file, break line: 
+    /* Iterate over the input files, starting from the second element in the argv array */
+    for (file_index = 1; file_index < argc; ++file_index) {
+        /* If a previous file processing failed, print a newline */
+		if (!succeeded) {
             puts("");
-        }
-        succeeded = handel_singel_file(argv[number_of_file]);
-    }
+        } 
+
+        /* Process macros in the current input file */
+        process_macros(argv[file_index]);
+        /* Process the current input file and update the success flag */
+		succeeded = handle_single_file(argv[file_index]);
+	}
     
-    */
-    
-    return 0;
+    /* Return 0 to indicate successful program execution */
+	return 0;
 }
 
 
+bool handle_single_file(char *file_name) {
+    /* File-related variables */
+    char *input_file_name;                /* Name of the input assembly file */ 
+    FILE *input_file_ptr;                 /* Current assembly file */
 
-bool handel_singel_file(char *file_name) {
-    int temp_c; /*Temporary variable for skiping remainin characters*/
-    int index_l; /* The index of line, used to track the position within a line of the input file*/
-    long ic = IC_INIT_VALUE; /* Instruction counter*/
-    long dc = 0;    /* Data counter*/
-    long ic_first_pass;     /* Store the value of the Instruction Counter (IC) after the first pass */   
-    long dc_first_pass;     /* Store the value of the Data Counter (DC) after the first pass */
-    bool is_success = TRUE;
-    char *input_filename; 
-    char temp_line[MAX_LINE_LENGTH + 2]; /*Temporary string variable representing an input line*/
-    FILE *input_file; /*Current assembly file*/
-    long data_img[CODE_ARR_IMG_LENGTH]; /* Contains an image of the data*/
-    machine_word *code_img[CODE_ARR_IMG_LENGTH]; /* Contains an image of the machine code */
-    table symbol_table = NULL; /* The symbol table */
-    line_info current_line;
+    /* Line processing variables */
+    char current_line_buffer[MAX_LINE_LENGTH + 2];  /* Temporary string variable representing an input line */
+    line_info current_line;               /* Information about the current line being processed */
+    int current_character;                /* Temporary variable for skipping remaining characters*/
+    int line_index;                       /* Index of line, used to track the position within a line of the input file */
+
+    /* Assembly counters */
+    long ic = IC_INIT_VALUE;                /* Instruction counter */
+    long dc = 0;                            /* Data counter */
+    long beginning_ic_value;                /* Initial value of instruction counter */
+    long beginning_dc_value;                /* Initial value of data counter */
+
+    /* Symbol table and image arrays */
+    table symbol_table = NULL;              /* The symbol table */
+    long data_image[CODE_ARR_IMG_LENGTH];   /* Contains an image of the data */
+    machine_word *code_image[CODE_ARR_IMG_LENGTH];  /* Contains an image of the machine code */
+
+    /* Assembly process status */
+    bool process_success = TRUE;
     
-    /*Adds  .as extension */
-    input_filename = add_extension(file_name, ".as");
 
-    /*Open file with chack*/
-    input_file = fopen(input_filename, "r");
-    if (input_file == NULL){
-        printf("file can't be opend \n");
-        free(input_filename);
+    /* Add .as extension to input file name */
+    input_file_name = add_extension(file_name, ".as");
+
+    /* Open input file with error checking */
+    input_file_ptr = fopen(input_file_name, "r");
+    if (input_file_ptr == NULL){
+        printf("file can't be opened \n");
+        free(input_file_name);
         return FALSE;
     } 
     
-    /*Start first pass:*/
-    current_line.file_name = input_filename;
-    current_line.content = temp_line; /* The porpus of temp_line is to read from the file*/
+    /* Initialize line information */
+    current_line.file_name = input_file_name;
+    current_line.content = current_line_buffer;
     current_line.line_number = 1; 
 
-    /* Processes each line for the file separately */
-    /* Stop if there is a erroe of when EOF */
-    while (fgets(temp_line, MAX_LINE_LENGTH + 2, input_file) != NULL)
-    {
-        /* In case of too long line */    
-        if (strchr(temp_line, '\n') == NULL && !feof(input_file)){
+    /* First iteration: process each line of the input file */
+    while (fgets(current_line_buffer, MAX_LINE_LENGTH + 2, input_file_ptr) != NULL) {
+        /* Check for line length exceeding the maximum */ 
+        if (strchr(current_line_buffer, '\n') == NULL && !feof(input_file_ptr)) {
             print_error(current_line, "Line too long to process. Maximum line length should be %d.", MAX_LINE_LENGTH);
-            is_success = FALSE;
+            process_success = FALSE;
 
-            /* Skip remaining characters in the line */
-            temp_c = fgetc(input_file);
-            while (temp_c != '\n' && temp_c != EOF) {
-                temp_c = fgetc(input_file);
+            /* skip leftovers */
+            current_character = fgetc(input_file_ptr);
+            while (current_character != '\n' && current_character != EOF) {
+                current_character = fgetc(input_file_ptr);
             } 
-        }
-        else{
-            if (!process_line_fpass(current_line, &ic, &dc, code_img, data_img, &symbol_table)){
-                if (is_success) {
-                    /* free_code_image(code_img, ic_before); */
-                    ic_first_pass = -1;
-                    is_success = FALSE;
+        } else {
+            /* Process the line in the current iteration */
+            if (!process_line_fpass(current_line, &ic, &dc, code_image, data_image, &symbol_table)){
+                if (process_success) {
+                    beginning_ic_value = -1;
+                    process_success = FALSE;
                 }
             }  
         }
         current_line.line_number++;
     }
     
-    /* Saves IC and DC of the first pass*/
-    ic_first_pass = ic;
-    dc_first_pass = dc;
+    /* Save initial IC and DC values */
+    beginning_ic_value = ic;
+    beginning_dc_value = dc;
 
-
-    /* If the first pass success, start the seconcd pass */
-    if (is_success) {
-
+    /* If the first iteration succeeded, start the second iteration */
+    if (process_success) {
         ic = IC_INIT_VALUE;
-
-        /* Adds teh IC to each DC for each of teh data symbols in the table*/
-        add_value_to_type(symbol_table, ic_first_pass, DATA_SYMBOL);
+        add_value_to_type(symbol_table, beginning_ic_value, DATA_SYMBOL);
+        rewind(input_file_ptr);
         
-        /* Starts teh second pass*/
-        rewind(input_file); /* Starts from the beginning of the file */
-        
-        for (current_line.line_number = 1; !feof(input_file); current_line.line_number++) {
-            index_l = 0;
-            fgets(temp_line, MAX_LINE_LENGTH, input_file); /* Gets the line */
-            index_l = skip_spaces(temp_line, index_l);  /*Skips all the spaces or tabs*/
-            if (code_img[ic - IC_INIT_VALUE] != NULL || temp_line[index_l] == '.') {
-                is_success &= process_line_spass(current_line, &ic, code_img, &symbol_table);
+        /* Second iteration: process each line of the input file */
+        for (current_line.line_number = 1; !feof(input_file_ptr); current_line.line_number++) {
+            line_index = 0;
+            fgets(current_line_buffer, MAX_LINE_LENGTH, input_file_ptr);
+            line_index = skip_spaces(current_line_buffer, line_index);
+            if (code_image[ic - IC_INIT_VALUE] != NULL || current_line_buffer[line_index] == '.') {
+                process_success &= process_line_spass(current_line, &ic, code_image, &symbol_table);
             }
             current_line.line_number++;
         }
 
-        /* Write files if second pass succeeded */
-		if (is_success) {
-			/* Everything was done. Write to *filename.ob/.ext/.ent */
-			is_success = write_output_files(code_img, data_img, ic_first_pass, dc_first_pass, file_name, symbol_table);
+        /* If second iteration succeeded, write output files */
+		if (process_success) {
+			process_success = write_output_files(code_image, data_image, beginning_ic_value, beginning_dc_value, file_name, symbol_table);
 		}
     }
-    /* Now let's free some pointer: */
-	/* current file name */
-	free(input_filename);
-	/* Free symbol table */
-	free_table(symbol_table);
-	/* Free code & data buffer contents */
-	free_code_image(code_img, ic_first_pass);
 
-	/* return whether every assembling succeeded */
-	return is_success;
+    /* Clean up resources */
+	free(input_file_name);
+	free_table(symbol_table);
+	free_code_image(code_image, beginning_ic_value);
+
+	return process_success;
 }
+
 
 
