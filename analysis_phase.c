@@ -6,7 +6,7 @@
 #include "utility_functions.h"
 
 /**
- *  Processes a single operand in SPASS assembly code.
+ * @brief Processes a single operand in SPASS assembly code.
  *
  * This function processes a single operand extracted from the line content.
  * It determines the addressing type of the operand, updates the current instruction counter accordingly,
@@ -57,14 +57,14 @@ bool process_line_spass(line_info line, long *ic, machine_word **code_img, table
                 print_error(line, "You have to specify a label name for .entry instruction.");
                 return FALSE;
             }
-            if (find_by_types(*symbol_table, token)->type != ENTRY_SYMBOL) {
+            if (find_by_types(*symbol_table, token, 1, ENTRY_SYMBOL) == NULL) {
                 table_entry *item;
                 token = strtok(line.content + index_instruction, "\n"); /* Extract token */
 
-                item = find_by_types(*symbol_table, token);
-                if (item->type != DATA_SYMBOL && item->type != CODE_SYMBOL) {
-                    item = find_by_types(*symbol_table, token);
-                    if (item->type == EXTERNAL_SYMBOL) {
+                item = find_by_types(*symbol_table, token, 2, DATA_SYMBOL, CODE_SYMBOL);
+                if (item == NULL) {
+                    item = find_by_types(*symbol_table, token, 1, EXTERNAL_SYMBOL);
+                    if (item == NULL) {
                         print_error(line, "The symbol %s can be either external or entry, but not both.", item->type);
                         return FALSE;
                     }
@@ -124,7 +124,7 @@ bool add_symbols_to_code(line_info line, long *ic, machine_word **code_img, tabl
             }
             if (operand_count) {
                 is_valid = process_spass_operand(line, &current_ic, ic, operands[1], code_img, symbol_table);
-                free(operands[0]);
+                free(operands[1]);
                 if (!is_valid) {
                     return FALSE;
                 }
@@ -183,15 +183,14 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
             convert_defind(number, *symbol_table, FALSE);
 
             /* Find the symbol in the symbol table */
-            item = find_by_types(*symbol_table, label);
+            item = find_by_types(*symbol_table, label, 3, DATA_SYMBOL, CODE_SYMBOL, EXTERNAL_SYMBOL);
             if (item == NULL) {
                 print_error(line, "The symbol %s not found", operand);
                 return FALSE;
             }
-
             /* Set data to add */
             data_to_add = item->value;
-
+            printf("%s, %d\n", line.content, data_to_add);
             /* Handle external symbols */
             if (item->type == EXTERNAL_SYMBOL) {
                 add_table_item(symbol_table, operand, (*curr_ic) + 1, EXTERNAL_REFERENCE);
@@ -219,7 +218,8 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
         }
         else {
             /* Handle direct addressing mode */
-            item = find_by_types(*symbol_table, operand);
+            item = find_by_types(*symbol_table, operand, 3, DATA_SYMBOL, CODE_SYMBOL, EXTERNAL_SYMBOL);
+
             if (item == NULL) {
                 print_error(line, "The symbol %s not found", operand);
                 return FALSE;

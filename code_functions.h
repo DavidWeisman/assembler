@@ -1,5 +1,5 @@
-#ifndef _CODE_H
-#define _CODE_H
+#ifndef _CODE_FUNCTIONS_H
+#define _CODE_FUNCTIONS_H
 #include "data_tables.h"
 #include "global_variables.h"
 
@@ -109,7 +109,8 @@ bool validate_operand_by_opcode(line_info line, addressing_type first_addresing,
  */
 code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char *operands[2], table symbol_table);
 
-/* Constructs a data word based on the given parameters.
+/**
+ *  Constructs a data word based on the given parameters.
  *
  * This function builds a data word according to the provided addressing mode, data value,
  * and flags indicating whether the symbol is external and whether it's a source operand.
@@ -123,7 +124,8 @@ code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char 
  */
 data_word *build_data_word(addressing_type addressing, long data, bool is_extern_symbol, bool is_dest_operand);
 
-/* Constructs a data word using two data values as registers.
+/**
+ *  Constructs a data word using two data values as registers.
  *
  * This function constructs a data word by combining two data values as registers,
  * according to the given addressing mode and addressing method. It sets the appropriate

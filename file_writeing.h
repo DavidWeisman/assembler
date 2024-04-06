@@ -1,9 +1,10 @@
-#ifndef _WRITEFILES_H
-#define _WRITEFILES_H
+#ifndef _FILE_WRRITEING_H
+#define _FILE_WRRITEING_H
 #include "global_variables.h"
 #include "data_tables.h"
 
-/* Writes output files including machine code, external references, and entry symbols.
+/**
+ *  Writes output files including machine code, external references, and entry symbols.
  *
  * This function writes output files containing machine code, external references, and entry symbols.
  * It first filters the symbol table to extract external references and entry symbols. Then, it calls

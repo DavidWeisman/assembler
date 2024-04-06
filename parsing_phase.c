@@ -9,7 +9,7 @@
 
 
 /**
- *  Processes a single code instruction during the first pass of assembly.
+ * @brief Processes a single code instruction during the first pass of assembly.
  *
  * This function processes a single code instruction during the first pass of the assembly process.
  * It extracts the operation and operands, determines the opcode, analyzes operands, builds the code word,
@@ -38,14 +38,14 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
     if (!line.content[index_line] || line.content[index_line] == '\n' || line.content[index_line] == EOF || line.content[index_line] == ';') {
         return TRUE;
     }
-
+    
     /* Check for macro definition */
     if (!check_mdefine(line, symbol_table, symbol)) {
         return FALSE;
-    } else if (find_by_types(*symbol_table, symbol) && find_by_types(*symbol_table, symbol)->type == MDEFINE_SYMBOL) {
+    } else if (find_by_types(*symbol_table, symbol, 1, MDEFINE_SYMBOL) != NULL) {
         return TRUE;
     }
-
+    
     /* Extract label */
     if (extract_label(line, symbol)) {
         return FALSE;
@@ -72,9 +72,9 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
     if (line.content[index_line] == '\n') {
         return TRUE;
     }
-
+    
     /* Check if symbol is already defined */
-    if (find_by_types(*symbol_table, symbol)) {
+    if (find_by_types(*symbol_table, symbol, 3, EXTERNAL_SYMBOL, DATA_SYMBOL, CODE_SYMBOL)) {
         print_error(line, "Symbol %s is already defined.", symbol);
         return FALSE;
     }
@@ -89,17 +89,17 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
 
     /* Skip leading spaces */
     index_line = skip_spaces(line.content, index_line);
-
+    
     /* Process instruction */
     if (currentInstruction != NONE_INST) {
         /* Process .data and .string instructions */
         if ((currentInstruction == DATA_INST || currentInstruction == STRING_INST) && symbol[0] != '\0') {
             if (currentInstruction == STRING_INST) {
-                add_table_item(symbol_table, symbol, *DC - 1, DATA_SYMBOL);
+                add_table_item(symbol_table, symbol, *DC, DATA_SYMBOL);
             }
             add_table_item(symbol_table, symbol, *DC, DATA_SYMBOL);
         }
-
+        
         /* Process .string instruction */
         if (currentInstruction == STRING_INST) {
             return process_string_instruction(line, index_line, data_img, DC);
@@ -138,12 +138,12 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
         }
         return process_code(line, index_line, IC, code_img, *symbol_table);
     }
-
+    
     return TRUE;
 }
 
 /**
- * Builds an extra code word for an operand during the first pass.
+ * @brief Builds an extra code word for an operand during the first pass.
  *
  * This function constructs an extra code word for an operand during the first pass of assembly.
  * It determines the addressing mode of the operand, extracts its value, builds the data word, and updates the code image accordingly.
@@ -157,7 +157,7 @@ bool process_line_fpass(line_info line, long *IC, long *DC, machine_word **code_
 static void build_extra_codeword_fpass(machine_word **code_img, long *ic, char *operand, bool is_src_operand, table symbol_table);
 
 /**
- *  Builds an extra code word for a register addressing mode instruction during the first pass.
+ * @brief Builds an extra code word for a register addressing mode instruction during the first pass.
  *
  * This function constructs an extra code word for a register addressing mode instruction during the first pass.
  * It extracts the register values from the operands, builds the data word, and updates the code image accordingly.
@@ -240,7 +240,6 @@ static bool process_code(line_info line, int index_l, long *ic, machine_word **c
             }   
         }
     }
-
     /* Process operands */
     if (operand_count--) {
         build_extra_codeword_fpass(code_img, ic, operands[0], TRUE, symbol_table);

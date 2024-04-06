@@ -1,5 +1,5 @@
-#ifndef _TABLE_H
-#define _TABLE_H
+#ifndef _DATA_TABLES_H
+#define _DATA_TABLES_H
 #include "global_variables.h"
 
 /** 
@@ -29,59 +29,69 @@ typedef struct entry {
     symbol_type type;   /* Type of the entry (symbol_type enum) */
 } table_entry;
 
-/** 
- * Adds an item to the table in sorted order by value.
- * 
- * @param tab Pointer to the table.
- * @param name Name of the item to be added.
- * @param value Value associated with the item.
- * @param type Type of the item (symbol_type enum).
- * @return None.
+/**
+ * @brief Adds a new item to the symbol table.
+ *
+ * This function creates a new table entry with the specified name, value, and type, and inserts it into the symbol table in sorted order based on the value.
+ *
+ * @param tab Pointer to the symbol table.
+ * @param name The name of the symbol to be added.
+ * @param value The value associated with the symbol.
+ * @param type The type of the symbol (e.g., DATA_SYMBOL, CODE_SYMBOL).
  */
 void add_table_item(table *tab, char *name, long value, symbol_type type);
 
-/** 
- * Adds a value to the specified type in the table.
- * 
- * @param tab Table to add the value to.
- * @param to_add Value to add.
- * @param type Type of the item (symbol_type enum).
- * @return None.
+/**
+ * @brief Adds a value to all symbols of a specific type in the symbol table.
+ *
+ * This function iterates through the symbol table and adds the specified value to the 'value' field of all symbols of the given type.
+ *
+ * @param tab The symbol table.
+ * @param to_add The value to add to symbols of the specified type.
+ * @param type The type of symbols to which the value will be added (e.g., DATA_SYMBOL, CODE_SYMBOL).
  */
 void add_value_to_type(table tab, long to_add, symbol_type type);
 
-/** 
- * Checks if the item name matches a given name.
- * 
- * @param table_name Name of the item.
- * @param new_name Name to compare.
- * @return Returns true if the names match, otherwise false.
+/**
+ * @brief Checks if the name of an item matches a given name.
+ *
+ * This function compares the name of an item in the table with a given name and returns TRUE if they are equal, otherwise FALSE.
+ *
+ * @param table_name The name of the item in the table.
+ * @param new_name The name to compare with the item's name.
+ * @return Returns TRUE if the names match, otherwise FALSE.
  */
 bool check_item_name(char *table_name, char *new_name);
 
-/** 
- * Finds an item by its type in the table.
- * 
- * @param tab Table to search.
- * @param name Name of the item to find.
- * @return Returns a pointer to the found item or NULL if not found.
- */
-table_entry *find_by_types(table tab, char *name);
 
-/** 
- * Frees the memory allocated for the table.
- * 
- * @param tab Table to free.
- * @return None.
+/**
+ * @brief Finds an item in the table by its name and type.
+ *
+ * This function searches for an item in the table with the specified name and type. It returns a pointer to the found item if it exists, otherwise NULL.
+ *
+ * @param tab The table to search within.
+ * @param name The name of the item to search for.
+ * @return A pointer to the found item if it exists, otherwise NULL.
+ */
+table_entry *find_by_types(table tab,char *key, int symbol_count, ...);
+
+/**
+ * @brief Frees the memory allocated for a table.
+ *
+ * This function deallocates the memory used by a table and its entries.
+ *
+ * @param tab The table to be freed.
  */
 void free_table(table tab);
 
-/** 
- * Filters the table by a specific type.
- * 
- * @param tab Table to filter.
- * @param type Type to filter by.
- * @return Returns a new table containing only items of the specified type.
+/**
+ * @brief Filters a table by symbol type.
+ *
+ * This function creates a new table containing only the entries with the specified symbol type.
+ *
+ * @param tab The original table to be filtered.
+ * @param type The symbol type to filter by.
+ * @return Returns a new table containing entries with the specified symbol type.
  */
 table filter_table_by_type(table tab, symbol_type type);
 

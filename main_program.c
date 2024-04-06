@@ -9,7 +9,7 @@
 #include "preprocessor.h"
 
 /**
- * Processes a singel assembly input file, and returns the result
+ * @brief  Processes a singel assembly input file, and returns the result
  * @param file_name The file name
  * @return True or false, if succeeded or not
 */
@@ -79,7 +79,7 @@ bool handle_single_file(char *file_name) {
     
 
     /* Add .as extension to input file name */
-    input_file_name = add_extension(file_name, ".as");
+    input_file_name = add_extension(file_name, ".am");
 
     /* Open input file with error checking */
     input_file_ptr = fopen(input_file_name, "r");
@@ -121,7 +121,6 @@ bool handle_single_file(char *file_name) {
     /* Save initial IC and DC values */
     beginning_ic_value = ic;
     beginning_dc_value = dc;
-
     /* If the first iteration succeeded, start the second iteration */
     if (process_success) {
         ic = IC_INIT_VALUE;

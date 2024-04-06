@@ -305,9 +305,9 @@ bool check_mdefine(line_info line, table *symbol_table, char *symbol) {
             }
 
             /* Check if label already exists in the symbol table */
-            item = find_by_types(*symbol_table, label);
-            if (item) {
-                if (item->type == MDEFINE_SYMBOL) {
+            item = find_by_types(*symbol_table, label, 1, MDEFINE_SYMBOL);
+            if (item != NULL) {
+                if (item != NULL) {
                 printf("You cannot define a mdefine type more than once with the same name.");
                 return FALSE;
                 }

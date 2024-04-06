@@ -1,5 +1,5 @@
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef _UTILITY_FUNCTIONS_H
+#define _UTILITY_FUNCTIONS_H
 
 #include "global_variables.h"
 #include "data_tables.h"

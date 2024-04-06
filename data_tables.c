@@ -5,94 +5,108 @@
 #include "data_tables.h"
 #include "utility_functions.h"
 
-/* Adds an item to the table in sorted order by value */
-void add_table_item(table *tab, char *name, long value, symbol_type type){
-    char* copy_name;    /* Copy of the name string */
-    table prev_table;   /* Previous table entry */
-    table curr_table;   /* Current table entry */
-    table new_table;    /* New table entry */
+/* Adds a new item to the symbol table */
+void add_table_item(table *tab, char *name, long value, symbol_type type) {
+    char* copy_name;            /* Copy of the symbol name */
+    table prev_table;           /* Pointer to the previous table entry */
+    table curr_table;           /* Pointer to the current table entry */
+    table new_table;            /* Pointer to the new table entry */
 
     /* Allocate memory for the new table entry */
     new_table = (table)malloc(sizeof(table_entry));
-    if (new_table == NULL){
+    if (new_table == NULL) {
         printf("Memory not allocated.\n");
         return;
     }
 
-    /* Allocate memory for the copy of the name */
+    /* Allocate memory for the copy of the symbol name */
     copy_name = (char *)malloc((strlen(name) + 1) * sizeof(char));
-    if (copy_name == NULL){
+    if (copy_name == NULL) {
         printf("Memory not allocated.\n");
         return;
     }
 
-    /* Copy the name and assign other values */
+    /* Copy the symbol name */
     strcpy(copy_name, name);
     new_table->name = copy_name;
     new_table->value = value;
     new_table->type = type;
 
-    /* If the table is empty, set the new table item as the head of the table*/
+    /* Insert the new entry into the symbol table */
     if ((*tab) == NULL || (*tab)->value > value) {
-		new_table->next = (*tab);
-		(*tab) = new_table;
-		return;
-	}
+        new_table->next = (*tab);
+        (*tab) = new_table;
+        return;
+    }
 
-    /* Insert the new entry into the table in sorted order */
+    /* Traverse the symbol table to find the correct position to insert the new entry */
     curr_table = (*tab)->next;
-	prev_table = *tab;
-    while (curr_table != NULL && curr_table->value < value){
+    prev_table = *tab;
+    while (curr_table != NULL && curr_table->value < value) {
         prev_table = curr_table;
         curr_table = curr_table->next;
     }
+    
+    /* Insert the new entry */
     new_table->next = curr_table;
     prev_table->next = new_table;
 }
 
-/* Adds a value to the specified type in the table. */
+/* Adds a value to all symbols of a specific type in the symbol table */
 void add_value_to_type(table tab, long to_add, symbol_type type) {
-    table curr_item;
+    table curr_item;  /* Pointer to the current table entry */
+
+    /* Iterate through the symbol table */
     for (curr_item = tab; curr_item != NULL; curr_item = curr_item->next) {
+        /* Check if the current symbol's type matches the specified type */
         if (curr_item->type == type) {
+            /* Add the specified value to the current symbol's value */
             curr_item->value += to_add;
         }
     }
 }
 
-/* Checks if the item name matches a given name */
+/* Checks if the name of an item matches a given name */
 bool check_item_name(char *table_name, char *new_name){
     return strcmp(table_name, new_name) == 0;
 }
 
-/* Finds an item by its type in the table */
-table_entry *find_by_types(table tab, char *name){
-    /* If the table is empty, there is nothing to find*/
-    if (tab == NULL){
+/* Finds an item in the table by its name and type */
+table_entry *find_by_types(table tab, char *key, int symbol_count, ...) {
+	int i;
+    va_list arglist;
+	symbol_type *valid_symbol_types = malloc((symbol_count) * sizeof(int));
+    
+    if (valid_symbol_types == NULL) {
         return NULL;
     }
-    
-    /* Gose over all the table, and checks if the type is valid and have the same name*/
-    do {
-        switch (tab->type) {
-            case CODE_SYMBOL:
-            case DATA_SYMBOL:
-            case EXTERNAL_SYMBOL:
-            case ENTRY_SYMBOL:
-            case EXTERNAL_REFERENCE:
-            case MDEFINE_SYMBOL:
-                if (check_item_name(tab->name, name)) {
-                    return tab;
-                }
-                break;
-        }
-    } while ((tab = tab->next) != NULL);
-    
-    /* NO item was found*/
-    return NULL;
+	/* Build a list of the valid types */
+	
+	va_start(arglist, symbol_count);
+	for (i = 0; i < symbol_count; i++) {
+		valid_symbol_types[i] = va_arg(arglist, symbol_type);
+	}
+	va_end(arglist);
+	/* table null => nothing to dos */
+	if (tab == NULL) {
+		free(valid_symbol_types);
+		return NULL;
+	}
+	/* iterate over table and then over array of valid. if type is valid and same key, return the entry. */
+	do {
+		for (i = 0; i < symbol_count; i++) {
+			if (valid_symbol_types[i] == tab->type && strcmp(key, tab->name) == 0) {
+				free(valid_symbol_types);
+				return tab;
+			}
+		}
+	} while ((tab = tab->next) != NULL);
+	/* not found, return NULL */
+	free(valid_symbol_types);
+	return NULL;
 }
 
-/* Frees the memory allocated for the table */
+/* Frees the memory allocated for a table */
 void free_table(table tab) {
 	table prev_entry;
     table curr_entry = tab;
@@ -105,16 +119,15 @@ void free_table(table tab) {
 	}
 }
 
-/* Filters the table by a specific type */
+/* Filters a table by symbol type */
 table filter_table_by_type(table tab, symbol_type type) {
 	table new_table = NULL;
-	/* For each entry, check if has the type. if so, insert to the new table. */
 	do {
 		if (tab->type == type) {
 			add_table_item(&new_table, tab->name, tab->value, tab->type);
 		}
 	} while ((tab = tab->next) != NULL);
-	return new_table; /* It holds a pointer to the first entry, dynamically-allocated, so it's fine (not in stack) */
+	return new_table; 
 }
 
 

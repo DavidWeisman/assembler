@@ -132,7 +132,7 @@ addressing_type get_addressing_type(char *operand, table symbol_table) {
         number[index_length] = '\0'; 
         /* Check if index number is a digit or a label name */
         if (!check_if_digit(number)) {
-            if (find_by_types(symbol_table, number) && find_by_types(symbol_table, number)->type != MDEFINE_SYMBOL) {
+            if (find_by_types(symbol_table, number, 1, MDEFINE_SYMBOL) == NULL) {
                 return NONE_ADDR;
             }
         }
@@ -166,10 +166,10 @@ void convert_defind(char *string, table symbol_table, bool is_immediate_addr){
     extracted_label[copy_index] = '\0'; /* Ensure proper termination of extracted_label */
     
     /* Find the symbol table entry corresponding to the extracted label */
-    symbol_entry = find_by_types(symbol_table, extracted_label);
+    symbol_entry = find_by_types(symbol_table, extracted_label, 1, MDEFINE_SYMBOL);
 
     /* If the label is found and it is of type MDEFINE_SYMBOL */
-    if (symbol_entry && symbol_entry->type == MDEFINE_SYMBOL) {
+    if (symbol_entry != NULL) {
         string_index = 0; /*  Reset string_index to start modifying the string */
 
         /* If the label is used in immediate addressing mode, add '#' prefix before the value */

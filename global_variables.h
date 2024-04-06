@@ -1,5 +1,5 @@
-#ifndef GLOBALS_H
-#define GLOBALS_H
+#ifndef GLOBAL_VARIABLES_H
+#define GLOBAL_VARIABLES_H
 
 /* Maximum length of a line in the source code */
 #define MAX_LINE_LENGTH 80

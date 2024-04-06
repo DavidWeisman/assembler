@@ -1,9 +1,9 @@
-#ifndef _INSTRUCTIONS_H
-#define _INSTRUCTIONS_H
+#ifndef _INSTRUCTIONS_SET_H
+#define _INSTRUCTIONS_SET_H
 #include "global_variables.h"
 
 /**
- *  Finds the instruction from the index within a line.
+ * @brief Finds the instruction from the index within a line.
  *
  * This function extracts the instruction from the specified index within the content of a line.
  * It skips leading spaces, reads the instruction until it encounters a tab, space, or the end of the line,
@@ -18,7 +18,7 @@
 instruction find_instruction_from_index(line_info line, int *index_line);
 
 /**
- *  Processes the string instruction within a line.
+ * @brief Processes the string instruction within a line.
  *
  * This function extracts and processes the string instruction from the specified index within the content of a line.
  * It checks for the presence of opening and closing quotes, then extracts the string content between them and 
@@ -34,7 +34,7 @@ instruction find_instruction_from_index(line_info line, int *index_line);
 bool process_string_instruction(line_info line, int index_line, long *data_img, long *dc);
 
 /**
- *  Processes the .data instruction within a line.
+ * @brief Processes the .data instruction within a line.
  *
  * This function extracts and processes the .data instruction and its operands from the specified index within the content of a line.
  * It reads integer values separated by commas, converts them to long integers, and stores them in the data_img array.

@@ -1,10 +1,10 @@
-#ifndef _SECOND_PASS_H
-#define _SECOND_PASS_H
+#ifndef _ANALYSIS_PHASE_H
+#define _ANALYSIS_PHASE_H
 #include "global_variables.h"
 #include "data_tables.h"
 
 /**
- *  Processes a line in the second pass of the assembly process.
+ * @brief Processes a line in the second pass of the assembly process.
  *
  * This function handles the processing of a line in the second pass of the assembly process.
  * It skips leading spaces, checks for comments or empty lines, and processes instructions or directives.
@@ -21,7 +21,7 @@
 bool process_line_spass(line_info line, long *ic, machine_word **code_img, table *symbol_table);
 
 /**
- *  Adds symbols to the code image.
+ * @brief Adds symbols to the code image.
  *
  * This function adds symbols to the code image based on the line content.
  * It extracts labels and operands from the line content and processes them.

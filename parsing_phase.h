@@ -1,10 +1,10 @@
-#ifndef _FIRST_PASS_H
-#define _FIRST_PASS_H
+#ifndef _PARSING_PHASE_H
+#define _PARSING_PHASE_H
 #include "global_variables.h"
 #include "data_tables.h"
 
 /**
- *  Processes a single line of code during the first pass of assembly.
+ * @brief Processes a single line of code during the first pass of assembly.
  *
  * This function processes a single line of code during the first pass of the assembly process.
  * It extracts the label, determines the instruction type, and processes the operands accordingly.

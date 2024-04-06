@@ -4,7 +4,8 @@
 #include "utility_functions.h"
 #include "data_tables.h"
 
-/* Macro to keep only the 24 least significant bits of a value.
+/**
+ * @brief Macro to keep only the 24 least significant bits of a value.
  *
  * This macro masks the input value with 0xFFFFFF, keeping only the 24 least significant bits.
  *
@@ -32,8 +33,33 @@ void print_binary(long value) {
 	printf("\n");
 }
 
+void print_base4(long value) {
+    /* Loop through each bit and print it */
+	int i;
+    for (i = 12; i >= 0; i -= 2) {
+        int symbol = (value >> i) & 3; 
+        char base4_symbol;
+        switch (symbol) {
+            case 0:
+                base4_symbol = '*';
+                break;
+            case 1:
+                base4_symbol = '#';
+                break;
+            case 2:
+                base4_symbol = '%';
+                break;
+            case 3:
+                base4_symbol = '!';
+                break;
+        }
+        printf("%c", base4_symbol);
+    }
+    printf("\n");
+}
+
 /**
- * Writes machine code and data to a .ob output file.
+ * @brief Writes machine code and data to a .ob output file.
  *
  * This function writes machine code and data to a .ob output file. It opens the file for writing,
  * writes the headers containing the final instruction and data counters, then writes the machine
@@ -51,7 +77,7 @@ void print_binary(long value) {
 static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf, char *filename);
 
 /**
- *  Writes a table to a file with the specified filename and extension.
+ * @brief Writes a table to a file with the specified filename and extension.
  *
  * This function writes the contents of a table to a file with the specified filename and extension.
  * It opens the file for writing, writes the table entries to the file, then closes the file.
@@ -113,7 +139,9 @@ static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf
             value = (KEEP_ONLY_21_LSB(code_img[index]->word.data->data) << 2) | (code_img[index]->word.data->ARE);
         }
         printf("%.7d\t", index + 100); /* Print memory address to console */
-        print_binary(value); /* Print binary representation to console */
+		print_binary(value);
+		printf("\n");
+        print_base4(value); /* Print binary representation to console */
         fprintf(file_descriptor, "\n%.7d %.6lx", index + 100, value); /* Write line to file */
     }
 
@@ -121,7 +149,9 @@ static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf
     for (index = 0; index < dcf; index++) {
         value = KEEP_ONLY_24_LSB(data_img[index]);
         printf("%.7d\t", icf + index); /* Print memory address to console */
-        print_binary(value); /* Print binary representation to console */
+		print_binary(value);
+		printf("\n");
+        print_base4(value); /* Print binary representation to console */
         fprintf(file_descriptor, "\n%.7ld %.6lx", icf + index, value); /* Write line to file */
     }
 

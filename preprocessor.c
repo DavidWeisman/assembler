@@ -185,7 +185,7 @@ void process_macros(char *file_name) {
     } 
 
     /* Add .txt extension to output file name */
-    outout_file_name = add_extension(file_name, ".txt");
+    outout_file_name = add_extension(file_name, ".am");
 
     /* Open output file with error checking */
     output_file_ptr = fopen(outout_file_name, "w");
