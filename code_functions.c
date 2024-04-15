@@ -372,7 +372,7 @@ code_word *get_code_word(line_info line, opcode curr_opcode, int op_count, char 
     /* Allocate memory for the code word */
     codeword = (code_word *)malloc(sizeof(code_word));
     if (codeword == NULL) {
-        printf("Memory allocation failed\n");
+        print_error(line, "Memory allocation failed\n");  
         return NULL;
     }
 
@@ -413,7 +413,7 @@ static bool validate_op_addr(line_info line, addressing_type op_addressing, int 
     }
     /* If the addressing mode is not valid, print an error message */
     if (!is_valid) {
-        print_error(line, "Invalid addressing mode for first operand.");
+        print_error(line, "Invalid addressing mode for operand.");
         return FALSE;
     }
     return TRUE;    /* Return true if addressing mode is valid */

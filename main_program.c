@@ -41,8 +41,6 @@ int main(int argc, char *argv[]){
             puts("");
         } 
 
-        /* Process macros in the current input file */
-        process_macros(argv[file_index]);
         /* Process the current input file and update the success flag */
 		succeeded = handle_single_file(argv[file_index]);
 	}
@@ -77,9 +75,24 @@ bool handle_single_file(char *file_name) {
     /* Assembly process status */
     bool process_success = TRUE;
     
+    /* Boolean flag indicating whether macros are present */
+    bool has_macros;
 
-    /* Add .as extension to input file name */
-    input_file_name = add_extension(file_name, ".am");
+    /* Process macros in the current input file */
+    if (!process_macros(file_name, &has_macros)){
+        return FALSE;
+    }
+
+    if (has_macros) {
+        /* Add .am extension to input file name in case there is macros present */
+        input_file_name = add_extension(file_name, ".am");
+    }
+    else {
+        /* Add .as extension to input file name in case there isn't macros present*/
+        input_file_name = add_extension(file_name, ".as");
+    }
+
+    
 
     /* Open input file with error checking */
     input_file_ptr = fopen(input_file_name, "r");
@@ -137,13 +150,14 @@ bool handle_single_file(char *file_name) {
             }
             current_line.line_number++;
         }
-
+        
         /* If second iteration succeeded, write output files */
 		if (process_success) {
 			process_success = write_output_files(code_image, data_image, beginning_ic_value, beginning_dc_value, file_name, symbol_table);
 		}
+        
     }
-
+    
     /* Clean up resources */
 	free(input_file_name);
 	free_table(symbol_table);

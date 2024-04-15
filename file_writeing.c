@@ -33,9 +33,10 @@ void print_binary(long value) {
 	printf("\n");
 }
 
-void print_base4(long value) {
+void print_base4(FILE *file_descriptor, int index, long value) {
     /* Loop through each bit and print it */
 	int i;
+    fprintf(file_descriptor, "\n%.7d\t", index);
     for (i = 12; i >= 0; i -= 2) {
         int symbol = (value >> i) & 3; 
         char base4_symbol;
@@ -53,9 +54,8 @@ void print_base4(long value) {
                 base4_symbol = '!';
                 break;
         }
-        printf("%c", base4_symbol);
+        fprintf(file_descriptor, "%c", base4_symbol);
     }
-    printf("\n");
 }
 
 /**
@@ -97,7 +97,7 @@ int write_output_files(machine_word **code_img, long *data_img, long icf, long d
     bool result; /* Result of file writing operations */
     table externals = filter_table_by_type(symbol_table, EXTERNAL_REFERENCE); /* Extract external references */
     table entries = filter_table_by_type(symbol_table, ENTRY_SYMBOL); /* Extract entry symbols */
-
+    
     /* Write machine code, external references, and entry symbols to separate files */
     result = write_ob(code_img, data_img, icf, dcf, filename) &&
              write_table_to_file(externals, filename, ".ext") &&
@@ -138,21 +138,13 @@ static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf
         } else {
             value = (KEEP_ONLY_21_LSB(code_img[index]->word.data->data) << 2) | (code_img[index]->word.data->ARE);
         }
-        printf("%.7d\t", index + 100); /* Print memory address to console */
-		print_binary(value);
-		printf("\n");
-        print_base4(value); /* Print binary representation to console */
-        fprintf(file_descriptor, "\n%.7d %.6lx", index + 100, value); /* Write line to file */
+        print_base4(file_descriptor, index + 100, value); /* Print binary representation to console */
     }
 
     /* Write data lines to the file */
     for (index = 0; index < dcf; index++) {
         value = KEEP_ONLY_24_LSB(data_img[index]);
-        printf("%.7d\t", icf + index); /* Print memory address to console */
-		print_binary(value);
-		printf("\n");
-        print_base4(value); /* Print binary representation to console */
-        fprintf(file_descriptor, "\n%.7ld %.6lx", icf + index, value); /* Write line to file */
+        print_base4(file_descriptor, index + icf, value); /* Print binary representation to console */
     }
 
     fclose(file_descriptor); /* Close the output file */
@@ -162,7 +154,14 @@ static bool write_ob(machine_word **code_img, long *data_img, long icf, long dcf
 /* Writes a table to a file with the specified filename and extension */
 static bool write_table_to_file(table tab, char *filename, char *file_extension) {
 	FILE *file_descriptor;
-    char *full_filename = add_extension(filename, file_extension); /* Create full filename with extension */
+    char *full_filename;
+
+    /* If the table is NULL or empty, return true without performing any operations */
+    if (tab == NULL) {
+        return TRUE;
+    }
+
+    full_filename = add_extension(filename, file_extension); /* Create full filename with extension */
 
     file_descriptor = fopen(full_filename, "w"); /* Open the output file for writing */
     free(full_filename); /* Free memory allocated for the full filename */
@@ -172,9 +171,6 @@ static bool write_table_to_file(table tab, char *filename, char *file_extension)
         printf("Can't create or rewrite to file %s.", full_filename);
         return FALSE;
     }
-
-    /* If the table is NULL or empty, return true without performing any operations */
-    if (tab == NULL) return TRUE;
 
     /* Write table entries to the file */
     fprintf(file_descriptor, "%s %.7ld", tab->name, tab->value);

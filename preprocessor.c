@@ -160,7 +160,7 @@ static bool find_macro_index(line_info line, struct macro_info *macros, int numb
     return FALSE;
 }
 
-void process_macros(char *file_name) {
+bool process_macros(char *file_name, bool *has_macros) {
     FILE *input_file_ptr;                   /* Pointer to input file */
     FILE *output_file_ptr;                  /* Pointer to output file */
     line_info current_line;                 /* Information about the current line */
@@ -181,19 +181,10 @@ void process_macros(char *file_name) {
     if (input_file_ptr == NULL){
         printf("file can't be opend \n");
         free(input_file_ptr);
-        return;
+        return FALSE;
     } 
 
-    /* Add .txt extension to output file name */
-    outout_file_name = add_extension(file_name, ".am");
-
-    /* Open output file with error checking */
-    output_file_ptr = fopen(outout_file_name, "w");
-    if (output_file_ptr == NULL){
-        printf("file can't be opend \n");
-        free(outout_file_name);
-        return;
-    } 
+     
     
     current_line.content = line_buffer;
     current_line.line_number = 1;
@@ -215,7 +206,25 @@ void process_macros(char *file_name) {
         }
         current_line.line_number++;
     }
-   
+    
+    if (total_macros == 0){
+        (*has_macros) = FALSE;
+        return TRUE;
+    }
+    
+    (*has_macros) = TRUE;
+
+    /* Add .txt extension to output file name */
+    outout_file_name = add_extension(file_name, ".am");
+
+    /* Open output file with error checking */
+    output_file_ptr = fopen(outout_file_name, "w");
+    if (output_file_ptr == NULL){
+        printf("file can't be opend \n");
+        free(outout_file_name);
+        return FALSE;
+    }
+
     fseek(input_file_ptr, 0, SEEK_SET);
     current_line.content = line_buffer;
     current_line.line_number = 1;
@@ -241,5 +250,6 @@ void process_macros(char *file_name) {
     }
 
     fclose(output_file_ptr);
+    return TRUE;
 }
 

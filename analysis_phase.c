@@ -190,7 +190,6 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
             }
             /* Set data to add */
             data_to_add = item->value;
-            printf("%s, %d\n", line.content, data_to_add);
             /* Handle external symbols */
             if (item->type == EXTERNAL_SYMBOL) {
                 add_table_item(symbol_table, operand, (*curr_ic) + 1, EXTERNAL_REFERENCE);
@@ -199,7 +198,7 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
             /* Write data word for label */
             word_to_write = (machine_word *)malloc(sizeof(machine_word));
             if (word_to_write == NULL){
-                printf("Memory allocation failed\n");  
+                print_error(line, "Memory allocation failed\n");  
                 return FALSE;
             }
             word_to_write->length = 0;

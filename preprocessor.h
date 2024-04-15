@@ -9,7 +9,8 @@
  * are replaced with the corresponding macro content in the output file.
  * 
  * @param file_name Pointer to a string containing the name of the input file.
+ * @param has_macros Boolean flag indicating whether macros are present
  */
-void process_macros(char *file_name);
+bool process_macros(char *file_name, bool *has_macros);
 
 #endif
