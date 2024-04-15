@@ -1,4 +1,4 @@
-# C Project: 24-bit Assembler
+# C Project: 14-bit Assembler
 ![Build](https://github.com/avivnaaman/20465-project/workflows/Build/badge.svg?branch=master)
 ## About
 This project is an assignment in a C programming course at the open unvieristy (20465). The purpose of this project is to build an assembler for 15-instruction asssembly language, for an imaginary 24-bit CPU and 21 bits of memory size.
