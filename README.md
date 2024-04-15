@@ -38,13 +38,10 @@ Memory Size and Encoding: The size of the memory is defined as 4096 cells, at ad
 
 `file_writing`: As part of the assembly process, this module translates assembly code into machine code, generating output files in formats such as .ob, .ext, .ent, and .am. It completes the assembly workflow by producing executable machine code files ready for deployment or further processing.
 
-
-
-
-
 ## Usage
-`./assembler file1 file2 file3 ...`
-Will start the processing of each file (specify WITHOUT extension!). No support for double-quoting file names.
+Run the main_program followed by the names of assembly files to assemble:
+`main_program file1 file2 file3 ...`
+Replace file1, file2, file3, etc., with the names of your assembly files (without the file extension). Ensure filenames contain no spaces or special characters.
 
 ## Build
 You may build with several tools:
