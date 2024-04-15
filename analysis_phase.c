@@ -28,6 +28,7 @@ bool process_line_spass(line_info line, long *ic, machine_word **code_img, table
     char *token;            /* Token extracted from the line content */
     long index_instruction = 0; /* Index within the line content indicating the start of the instruction */
 
+    
     /* Skip leading spaces */
     index_instruction = skip_spaces(line.content, index_instruction); 
 
@@ -49,10 +50,11 @@ bool process_line_spass(line_info line, long *ic, machine_word **code_img, table
     if (line.content[index_instruction] == '.') {
         /* Process .entry directive */
         if (strncmp(".entry", line.content, 6) == 0) {
+           
             index_instruction += 6; /* Move index past ".entry" */
             index_instruction = skip_spaces(line.content, index_instruction); /* Skip spaces */
-            token = strtok(line.content + index_instruction, "\n\t"); /* Extract token */
-
+            token = strtok(line.content + index_instruction, " \n\t"); /* Extract token */
+             
             if (token == NULL) {
                 print_error(line, "You have to specify a label name for .entry instruction.");
                 return FALSE;
@@ -65,12 +67,13 @@ bool process_line_spass(line_info line, long *ic, machine_word **code_img, table
                 if (item == NULL) {
                     item = find_by_types(*symbol_table, token, 1, EXTERNAL_SYMBOL);
                     if (item == NULL) {
-                        print_error(line, "The symbol %s can be either external or entry, but not both.", item->type);
+                        print_error(line, "The symbol %s for .entry is undefined.", token);
                         return FALSE;
                     }
-                    print_error(line, "The symbol %s for .entry is undefined.", token);
-                    return FALSE;
+                    print_error(line, "The symbol %s can be either external or entry, but not both.", token);
+                    return FALSE;  
                 }
+                
                 /* Add the symbol to the symbol table as an entry */
                 add_table_item(symbol_table, token, item->value, ENTRY_SYMBOL);
             }
@@ -90,7 +93,7 @@ bool add_symbols_to_code(line_info line, long *ic, machine_word **code_img, tabl
     bool is_valid = TRUE;                /* Flag to indicate if the operation is valid */
     long current_ic = *ic;               /* Current instruction counter */
     int length = code_img[(*ic) - IC_INIT_VALUE]->length; /* Length of the current instruction */
-
+    
     /* Check if the instruction has operands */
     if (length > 1) {
         /* Skip leading spaces */
@@ -131,6 +134,7 @@ bool add_symbols_to_code(line_info line, long *ic, machine_word **code_img, tabl
             }
         }
     }
+    
     /* Update instruction counter */ 
     (*ic) = (*ic) + length;
     return TRUE;
@@ -147,7 +151,7 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
     if (addr == IMMEDIATE_ADDR || addr == REGISTER_ADDR) {
         (*curr_ic)++;
     }
-
+    
     /* Process operand based on addressing type */
     if (DIRECT_ADDR == addr || INDEX_FIXED_ADDR == addr) {
         long data_to_add;
@@ -182,6 +186,8 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
             /* Convert index number */
             convert_defind(number, *symbol_table, FALSE);
 
+
+
             /* Find the symbol in the symbol table */
             item = find_by_types(*symbol_table, label, 3, DATA_SYMBOL, CODE_SYMBOL, EXTERNAL_SYMBOL);
             if (item == NULL) {
@@ -208,7 +214,7 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
             /* Write data word for index */
             word_to_write = (machine_word *)malloc(sizeof(machine_word));
             if (word_to_write == NULL){
-                printf("Memory allocation failed\n");  
+                print_error(line, "Memory allocation failed\n");  
                 return FALSE;
             }
             word_to_write->length = 0;
@@ -216,32 +222,36 @@ bool process_spass_operand(line_info line, long *curr_ic, long *ic, char *operan
             code_img[(++(*curr_ic)) - IC_INIT_VALUE] = word_to_write;
         }
         else {
+            
             /* Handle direct addressing mode */
             item = find_by_types(*symbol_table, operand, 3, DATA_SYMBOL, CODE_SYMBOL, EXTERNAL_SYMBOL);
-
+            
             if (item == NULL) {
                 print_error(line, "The symbol %s not found", operand);
                 return FALSE;
             }
-
+            
             /* Set data to add */
             data_to_add = item->value;
-
+            
             /* Handle external symbols */
             if (item->type == EXTERNAL_SYMBOL) {
                 add_table_item(symbol_table, operand, (*curr_ic) + 1, EXTERNAL_REFERENCE);
             }
-
+            
             /* Write data word */
             word_to_write = (machine_word *)malloc(sizeof(machine_word));
             if (word_to_write == NULL){
-                printf("Memory allocation failed\n");  
+                print_error(line, "Memory allocation failed\n");  
                 return FALSE;
             }
+            
             word_to_write->length = 0;
             word_to_write->word.data = build_data_word(addr, data_to_add, item->type == EXTERNAL_SYMBOL, FALSE);
             code_img[(++(*curr_ic)) - IC_INIT_VALUE] = word_to_write;
+            
         }
+        
     }
     return TRUE;
 }

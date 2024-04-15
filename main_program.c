@@ -131,6 +131,7 @@ bool handle_single_file(char *file_name) {
         current_line.line_number++;
     }
     
+    
     /* Save initial IC and DC values */
     beginning_ic_value = ic;
     beginning_dc_value = dc;
@@ -148,7 +149,6 @@ bool handle_single_file(char *file_name) {
             if (code_image[ic - IC_INIT_VALUE] != NULL || current_line_buffer[line_index] == '.') {
                 process_success &= process_line_spass(current_line, &ic, code_image, &symbol_table);
             }
-            current_line.line_number++;
         }
         
         /* If second iteration succeeded, write output files */

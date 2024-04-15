@@ -1,0 +1,111 @@
+Error In file.as:8: Symbol LABEL is already defined.
+Error In file.as:9: Symbol CODELABEL is already defined.
+Error In file.as:14: Invalid external label name: 1nvalidLabel
+Error In file.as:15: Invalid external label name: Label@With4t
+Error In file.as:16: Invalid instruction name: .extern
+
+Error In file.as:17: Symbol WHATEVEREXT is already defined.
+Error In file.as:18: Invalid label name - cannot be longer than 32 chars, may only start with letter be alphanumeric.
+Error In file.as:19: Invalid label name - cannot be longer than 32 chars, may only start with letter be alphanumeric.
+Error In file.as:20: Invalid label name - cannot be longer than 32 chars, may only start with letter be alphanumeric.
+Error In file.as:21: Invalid label name - cannot be longer than 32 chars, may only start with letter be alphanumeric.
+Error In file.as:24: Missing closing quote of string
+Error In file.as:25: Missing opening quote of string
+Error In file.as:26: Missing opening quote of string
+Error In file.as:27: Unexpected comma after .data instruction
+Error In file.as:27: Expected integer for .data instruction (got '')
+Error In file.as:28: Multiple consecutive commas.
+Error In file.as:29: Multiple consecutive commas.
+Error In file.as:30: Missing data after comma
+Error In file.as:33: Missing data after comma
+Error In file.as:34: Expected integer for .data instruction (got '0.5')
+Error In file.as:35: Expected integer for .data instruction (got '5.9')
+Error In file.as:36: Expected integer for .data instruction (got '-0.1')
+Error In file.as:37: Expected integer for .data instruction (got '.5')
+Error In file.as:44: Operation requires 2 operands (got 0)
+Error In file.as:45: Operation requires 2 operands (got 1)
+Error In file.as:46: Too many operands for operation (got >2)
+Error In file.as:47: Operation requires 2 operands (got 0)
+Error In file.as:48: Operation requires 2 operands (got 1)
+Error In file.as:49: Too many operands for operation (got >2)
+Error In file.as:50: Operation requires 2 operands (got 0)
+Error In file.as:51: Operation requires 2 operands (got 1)
+Error In file.as:52: Too many operands for operation (got >2)
+Error In file.as:53: Operation requires 2 operands (got 0)
+Error In file.as:54: Operation requires 2 operands (got 1)
+Error In file.as:55: Too many operands for operation (got >2)
+Error In file.as:56: Operation requires 2 operands (got 0)
+Error In file.as:57: Operation requires 2 operands (got 1)
+Error In file.as:59: Operation requires 1 operand (got 0)
+Error In file.as:61: Operation requires 1 operand (got 0)
+Error In file.as:63: Operation requires 1 operand (got 0)
+Error In file.as:64: Too many operands for operation (got >2)
+Error In file.as:65: Operation requires 1 operand (got 0)
+Error In file.as:67: Operation requires 1 operand (got 0)
+Error In file.as:69: Operation requires 1 operand (got 0)
+Error In file.as:71: Operation requires 1 operand (got 0)
+Error In file.as:73: Operation requires 1 operand (got 0)
+Error In file.as:75: Operation requires 1 operand (got 0)
+Error In file.as:77: Too many operands for operation (got >2)
+Error In file.as:78: Operation requires no operands (got 1)
+Error In file.as:79: Operation requires no operands (got 2)
+Error In file.as:80: Operation requires no operands (got 1)
+Error In file.as:81: Operation requires no operands (got 2)
+Error In file.as:85: Invalid addressing mode for operand.
+Error In file.as:92: Invalid addressing mode for operand.
+Error In file.as:93: Invalid addressing mode for operand.
+Error In file.as:94: Invalid addressing mode for operand.
+Error In file.as:95: Invalid addressing mode for operand.
+Error In file.as:96: Invalid addressing mode for operand.
+Error In file.as:106: Invalid addressing mode for operand.
+Error In file.as:113: Invalid addressing mode for operand.
+Error In file.as:114: Invalid addressing mode for operand.
+Error In file.as:115: Invalid addressing mode for operand.
+Error In file.as:116: Invalid addressing mode for operand.
+Error In file.as:117: Invalid addressing mode for operand.
+Error In file.as:119: Invalid addressing mode for operand.
+Error In file.as:126: Invalid addressing mode for operand.
+Error In file.as:127: Invalid addressing mode for operand.
+Error In file.as:128: Invalid addressing mode for operand.
+Error In file.as:129: Invalid addressing mode for operand.
+Error In file.as:130: Invalid addressing mode for operand.
+Error In file.as:132: Invalid addressing mode for operand.
+Error In file.as:133: Invalid addressing mode for operand.
+Error In file.as:134: Invalid addressing mode for operand.
+Error In file.as:135: Invalid addressing mode for operand.
+Error In file.as:136: Invalid addressing mode for operand.
+Error In file.as:140: Invalid addressing mode for operand.
+Error In file.as:141: Invalid addressing mode for operand.
+Error In file.as:142: Invalid addressing mode for operand.
+Error In file.as:143: Invalid addressing mode for operand.
+Error In file.as:144: Invalid addressing mode for operand.
+Error In file.as:145: Invalid addressing mode for operand.
+Error In file.as:146: Invalid addressing mode for operand.
+Error In file.as:147: Invalid addressing mode for operand.
+Error In file.as:149: Invalid addressing mode for operand.
+Error In file.as:150: Invalid addressing mode for operand.
+Error In file.as:154: Invalid addressing mode for operand.
+Error In file.as:156: Invalid addressing mode for operand.
+Error In file.as:158: Invalid addressing mode for operand.
+Error In file.as:160: Invalid addressing mode for operand.
+Error In file.as:162: Invalid addressing mode for operand.
+Error In file.as:166: Invalid addressing mode for operand.
+Error In file.as:168: Invalid addressing mode for operand.
+Error In file.as:170: Invalid addressing mode for operand.
+Error In file.as:175: Invalid addressing mode for operand.
+Error In file.as:176: Operation requires 2 operands (got 1)
+Error In file.as:177: Operation requires 2 operands (got 1)
+Error In file.as:178: Operation requires 2 operands (got 1)
+Error In file.as:179: Operation requires 2 operands (got 1)
+Error In file.as:181: Invalid external label name: REALLYREALLYREALLYREALLYREALLYREALLYLONG
+Error In file.as:182: Unrecognized instruction: op.
+Error In file.as:183: Invalid label name - cannot be longer than 32 chars, may only start with letter be alphanumeric.
+Error In file.as:184: Invalid label name - cannot be longer than 32 chars, may only start with letter be alphanumeric.
+Error In file.as:185: Expecting ',' between operands
+Error In file.as:186: Expecting ',' between operands
+Error In file.as:187: Unrecognized instruction: label.
+Error In file.as:189: Invalid label name - cannot be longer than 32 chars, may only start with letter be alphanumeric.
+Error In file.as:190: Invalid label name - cannot be longer than 32 chars, may only start with letter be alphanumeric.
+Error In file.as:191: Invalid label name - cannot be longer than 32 chars, may only start with letter be alphanumeric.
+Error In file.as:193: Line too long to process. Maximum line length should be 80.
+Error In file.as:194: Invalid external label name: HELLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLOO

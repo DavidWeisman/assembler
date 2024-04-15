@@ -1,0 +1,16 @@
+Error In file.as:14: The symbol EXTERNLABEL can be either external or entry, but not both.
+Error In file.as:19: The symbol MYSTRINGS not found
+Error In file.as:20: The symbol MYSTRIN not found
+Error In file.as:21: The symbol YSTRING not found
+Error In file.as:22: The symbol MYSTRING123 not found
+Error In file.as:23: The symbol MYSTRING0 not found
+Error In file.as:25: The symbol XX not found
+Error In file.as:26: The symbol Y not found
+Error In file.as:27: The symbol X0 not found
+Error In file.as:30: The symbol SOMEUNKNOWNLABEL for .entry is undefined.
+Error In file.as:33: The symbol MYDATA0 for .entry is undefined.
+Error In file.as:34: The symbol 0MYDATA for .entry is undefined.
+Error In file.as:35: The symbol 0MYSTRING for .entry is undefined.
+Error In file.as:36: The symbol 0 for .entry is undefined.
+Error In file.as:37: The symbol NULL for .entry is undefined.
+Error In file.as:42: The symbol EMPTYLABEL not found

@@ -90,7 +90,6 @@ static bool skip_macro_definitions(FILE *input_file, line_info line, struct macr
         
         if (line.line_number == macros[remaining_macro_count].macro_line_number) {
             line.content = line_buffer;
-
             /* Read subsequent lines until the end of the current macro definition is found */
             do {
                 /* Skip spaces and move to the next char in the line*/
@@ -100,14 +99,13 @@ static bool skip_macro_definitions(FILE *input_file, line_info line, struct macr
 
                 /* Check if the line contains the "endmcr" marker */
                 if (strncmp(line.content + line_index, "endmcr", 6) == 0) {
+                    
                     (*end_of_macro_line) = line.line_number;
                     return FALSE;   /* Macro definition found, skip to the endmcr marker */
-                }
-                
+                }  
             }
             while(fgets(line_buffer, MAX_LINE_LENGTH, input_file) != NULL); 
-        }
-        
+        } 
     }
     return TRUE;    /* Not a macro definition, continue processing */
 }
@@ -192,9 +190,14 @@ bool process_macros(char *file_name, bool *has_macros) {
 
     /* Read input file line by line */
     while (fgets(line_buffer, MAX_LINE_LENGTH, input_file_ptr) != NULL) {
+        if (current_line.content[0] == '\n' || current_line.content[0] == '\0') {
+            current_line.line_number++;
+            continue;
+        }
+        
         line_index = 0;
         line_index = skip_spaces(current_line.content, line_index);
-
+        
         /* Check for macro definition */
         if (strncmp(current_line.content + line_index, "mcr ", 4) == 0) {
             macro_end_line = 0;
@@ -214,6 +217,8 @@ bool process_macros(char *file_name, bool *has_macros) {
     
     (*has_macros) = TRUE;
 
+
+
     /* Add .txt extension to output file name */
     outout_file_name = add_extension(file_name, ".am");
 
@@ -231,7 +236,12 @@ bool process_macros(char *file_name, bool *has_macros) {
     
     /*  Read input file again to handle macro invocations */
     while (fgets(line_buffer, MAX_LINE_LENGTH, input_file_ptr) != NULL) {
-        
+        if (current_line.content[0] == '\n' || current_line.content[0] == '\0') {
+            current_line.line_number++;
+            fprintf(output_file_ptr, "\n");
+            continue;
+        }
+
         /* Skips lines corresponding to macro definitions */
         if(!skip_macro_definitions(input_file_ptr, current_line, macros, total_macros, &macro_end_line)) {
             current_line.line_number = macro_end_line;
@@ -241,6 +251,7 @@ bool process_macros(char *file_name, bool *has_macros) {
         /* Check if the line contains a macro invocation and replace it with macro content */
         if(find_macro_index(current_line, macros, total_macros, &matched_macro_index)) {
             fprintf(output_file_ptr, "%s", macros[matched_macro_index].macro_code);
+            current_line.line_number++;
             continue;
         }
         
@@ -252,4 +263,3 @@ bool process_macros(char *file_name, bool *has_macros) {
     fclose(output_file_ptr);
     return TRUE;
 }
-
