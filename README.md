@@ -44,7 +44,15 @@ Run the main_program followed by the names of assembly files to assemble:
 Replace file1, file2, file3, etc., with the names of your assembly files (without the file extension). Ensure filenames contain no spaces or special characters.
 
 ## Build
-You may build with several tools:
-1. Using CMake: run `cmake --build .` (you might have to run `cmake --cofngiure .` first) - Provides support for CLion IDE
-2. Using `make` command (Makefile)
-3. Manually (Not recommended): compile each `*.c` file to `*.o` and then compile all to a single executable using `CC`/`GCC`/`CLang` with `-g a.o b.o .... -o exe`
+To build the assembler, follow these steps:
+1. Clone the repository to your local machine: `git clone https://github.com/DavidWeisam/assembler.git`
+2. Navigate to the project directory: `cd assembler`
+3. here are multiple ways to build the assembler:
+   - Using mingw32-make:
+     If you have mingw32-make installed, simply run: `mingw32-make`
+   - Using make command
+     If you have GNU Make installed, execute: `make`
+   - Manually (Not recommended):
+     You can manually compile each *.c file to *.o and then compile all into a single executable using CC/GCC/CLang. This         method is not recommended for simplicity and ease of use. An example command would be: `CC *.c -o main_program`
+  
+
