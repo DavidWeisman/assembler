@@ -1,8 +1,22 @@
 # C Project: 14-bit Assembler
-## About
-This project is an assignment in a C programming course at the open unvieristy (20465). The purpose of this project is to build an assembler for 15-instruction asssembly language, for an imaginary 24-bit CPU and 21 bits of memory size.
+Brief Description:
 
-License: MIT License, Affect from September 1st, 2020
+The Assembly Language Assembler project aims to develop a program capable of translating assembly language code into machine language, facilitating the conversion process and enabling the execution of assembly programs on target hardware. Assemblers play a crucial role in software development, as they bridge the gap between human-readable assembly instructions and the binary language understood by computers.
+
+Key Features:
+
+Assembly Code Parsing: The assembler will parse assembly language source code, recognizing instructions, labels, operands, and comments.
+
+Symbol Table Management: It will manage a symbol table to keep track of labels and their corresponding memory addresses.
+
+Instruction Translation: Translate assembly instructions into their equivalent machine language representations.
+
+Error Handling: Provide informative error messages for syntax errors, undefined symbols, and other issues encountered during assembly.
+
+Output Generation: Generate output files containing the translated machine code, ready for execution on the target hardware.
+
+Memory Size and Encoding: The size of the memory is defined as 4096 cells, at addresses 0-4095 (in decimal base), with each cell being 14 bits in size. In the output file containing the machine code that the assembler builds, each word will be encoded in "encrypted" base 4, where 0 is represented by "*", 1 by "#", 2 by "%", and 3 by "!".
+
 ## Source structure (Modules)
 1. `assembler` - main function definition, argv & argc processing, single file processing.
 2. `first_pass` - contains functions for processing a single line in the first pass and a code line in the first pass.
