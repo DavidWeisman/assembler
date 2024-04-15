@@ -131,7 +131,6 @@ bool handle_single_file(char *file_name) {
         current_line.line_number++;
     }
     
-    
     /* Save initial IC and DC values */
     beginning_ic_value = ic;
     beginning_dc_value = dc;
